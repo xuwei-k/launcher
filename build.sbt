@@ -1,6 +1,5 @@
 import Deps._
 import Util._
-import com.typesafe.tools.mima.core._, ProblemFilters._
 
 lazy val keepFullClasses = settingKey[Seq[String]](
   "Fully qualified names of classes that proguard should preserve the non-private API of."
@@ -23,11 +22,8 @@ ThisBuild / scalafmtOnCompile := !(Global / insideCI).value
 ThisBuild / Test / scalafmtOnCompile := !(Global / insideCI).value
 
 lazy val root = (project in file("."))
-  .enablePlugins(ShadingPlugin)
   .aggregate(launchInterfaceSub, launchSub)
-  .settings(javaOnly ++ Util.commonSettings("launcher") ++ Release.settings)
   .settings(nocomma {
-    mimaPreviousArtifacts := Set.empty
     Compile / packageBin := (launchSub / Proguard / proguard).value.head
     Compile / packageSrc := (launchSub / Compile / packageSrc).value
     Compile / packageDoc := (launchSub / Compile / packageDoc).value
@@ -68,23 +64,9 @@ def launchSettings =
 
 // The interface JAR for projects which want to be launched by sbt.
 lazy val launchInterfaceSub = (project in file("launcher-interface"))
-  .settings(javaOnly)
   .settings(nocomma {
     name := "Launcher Interface"
-    Compile / resourceGenerators += Def.task {
-      generateVersionFile("sbt.launcher.version.properties")(
-        version.value,
-        resourceManaged.value,
-        streams.value,
-        (Compile / compile).value
-      )
-    }.taskValue
     description := "Interfaces for launching projects with the sbt launcher"
-    mimaPreviousArtifacts := Set(organization.value % moduleName.value % "1.0.1")
-    mimaBinaryIssueFilters ++= Seq(
-      exclude[ReversedMissingMethodProblem]("xsbti.MavenRepository.allowInsecureProtocol"),
-      exclude[ReversedMissingMethodProblem]("xsbti.IvyRepository.allowInsecureProtocol")
-    )
     exportJars := true
   })
   .settings(Release.settings)
@@ -92,7 +74,6 @@ lazy val launchInterfaceSub = (project in file("launcher-interface"))
 // the launcher.  Retrieves, loads, and runs applications based on a configuration file.
 // TODO - move into a directory called "launcher-impl or something."
 lazy val launchSub = (project in file("launcher-implementation"))
-  .enablePlugins(SbtProguard)
   .dependsOn(launchInterfaceSub)
   .settings(Util.base)
   .settings(launchSettings)
@@ -134,8 +115,6 @@ lazy val launchSub = (project in file("launcher-implementation"))
         case _                                            => Some(generalFilter)
       }
     }
-    Proguard / proguardOptions += ProguardOptions.keepMain("xsbt.boot.Boot")
-    mimaPreviousArtifacts := Set.empty
   })
 
 def generalFilter = "!META-INF/**,!*.properties"

@@ -1,4 +1,5 @@
 import sbt._
+import sbt.given
 import Keys._
 import sbt.internal.inc.Analysis
 import xsbti.compile.CompileAnalysis
@@ -15,8 +16,8 @@ object Util {
 
   def minProject(path: File, nameString: String) =
     Project(Project.normalizeModuleID(nameString), path)
-      .settings(commonSettings(nameString) ++ Release.javaVersionCheckSettings: _*)
-  def baseProject(path: File, nameString: String) = minProject(path, nameString) settings (base: _*)
+      .settings(commonSettings(nameString): _*)
+  def baseProject(path: File, nameString: String) = minProject(path, nameString).settings(base: _*)
 
   /** Configures a project to be java only. */
   lazy val javaOnly = Seq[Setting[_]](

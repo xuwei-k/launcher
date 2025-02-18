@@ -9,7 +9,7 @@ object Deps {
   lazy val verify = "com.eed3si9n.verify" %% "verify" % "1.0.0"
 
   // TODO - these should be like the above, just ModuleIDs
-  lazy val ivy = "org.scala-sbt.ivy" % "ivy" % "2.3.0-sbt-839fad1cdc07cf6fc81364d74c323867230432ad"
+  lazy val ivy = "org.scala-sbt.ivy" % "ivy" % "2.3.0-sbt-77cc781d727b367d3761f097d89f5a4762771d41"
   lazy val coursier = "io.get-coursier" %% "coursier" % "2.0.16"
   lazy val scalaCompiler = Def.setting("org.scala-lang" % "scala-compiler" % scalaVersion.value)
 }

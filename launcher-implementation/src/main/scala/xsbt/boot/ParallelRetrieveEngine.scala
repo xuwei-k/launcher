@@ -93,20 +93,19 @@ private[xsbt] class ParallelRetrieveEngine(
           } else {
             Message.verbose("\tretrieving " + archive)
 
-            Future.traverse(artifactAndPaths.getValue().asScala) {
-              case path: String =>
-                Future {
-                  IvyContext.getContext().checkInterrupted()
-                  val _ = settings.resolveFile(path)
-                  retrieveFile(
-                    settings,
-                    eventManager,
-                    artifact,
-                    archive,
-                    path,
-                    options
-                  )
-                }
+            Future.traverse(artifactAndPaths.getValue().asScala) { case path: String =>
+              Future {
+                IvyContext.getContext().checkInterrupted()
+                val _ = settings.resolveFile(path)
+                retrieveFile(
+                  settings,
+                  eventManager,
+                  artifact,
+                  archive,
+                  path,
+                  options
+                )
+              }
             }
           }
       }
@@ -114,14 +113,13 @@ private[xsbt] class ParallelRetrieveEngine(
       val allRetrived: mSet[RetResult] =
         Await.result(Future.reduceLeft(allRetrivedFuture.toList)(_ ++ _), Duration.Inf)
 
-      val totalCopiedSize = allRetrived.foldLeft(0L) {
-        case (sum, ret) =>
-          if (ret.copied)
-            report.addCopiedFile(ret.destFile, ret.artifact)
-          else
-            report.addUpToDateFile(ret.destFile, ret.artifact)
+      val totalCopiedSize = allRetrived.foldLeft(0L) { case (sum, ret) =>
+        if (ret.copied)
+          report.addCopiedFile(ret.destFile, ret.artifact)
+        else
+          report.addUpToDateFile(ret.destFile, ret.artifact)
 
-          sum + ret.totalSizeDownloaded
+        sum + ret.totalSizeDownloaded
       }
 
       val elapsedTime = System.currentTimeMillis() - start

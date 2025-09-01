@@ -127,8 +127,8 @@ object Value {
   def get[T](v: Value[T]): T = v match {
     case e: Explicit[T] => e.value; case _ => throw new BootException("unresolved version: " + v)
   }
-  def readImplied[T](s: String, name: String, default: Option[String])(
-      implicit read: String => T
+  def readImplied[T](s: String, name: String, default: Option[String])(implicit
+      read: String => T
   ): Value[T] =
     if (s == "read") new Implicit(name, default map read)
     else Pre.error("expected 'read', got '" + s + "'")
@@ -146,7 +146,7 @@ object LaunchCrossVersion {
       case x if CrossVersionUtil.isFull(s)     => xsbti.CrossValue.Full
       case x if CrossVersionUtil.isBinary(s)   => xsbti.CrossValue.Binary
       case x if CrossVersionUtil.isDisabled(s) => xsbti.CrossValue.Disabled
-      case x                                   => Pre.error("unknown value '" + x + "' for property 'cross-versioned'")
+      case x => Pre.error("unknown value '" + x + "' for property 'cross-versioned'")
     }
 }
 
@@ -202,7 +202,7 @@ object Application {
     catch {
       case _: AbstractMethodError =>
         // Before 0.13 this method did not exist on application, so we need to provide a default value
-        //in the event we're dealing with an older Application.
+        // in the event we're dealing with an older Application.
         if (id.crossVersioned) xsbti.CrossValue.Binary
         else xsbti.CrossValue.Disabled
     }

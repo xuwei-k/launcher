@@ -8,16 +8,18 @@ class PlainApplication private (mainMethod: java.lang.reflect.Method) extends xs
     val IntClass = classOf[Int]
     val ExitClass = classOf[xsbti.Exit]
     // It seems we may need to wrap exceptions here...
-    try mainMethod.getReturnType match {
-      case ExitClass =>
-        mainMethod.invoke(null, configuration.arguments).asInstanceOf[xsbti.Exit]
-      case IntClass =>
-        PlainApplication.Exit(mainMethod.invoke(null, configuration.arguments).asInstanceOf[Int])
-      case _ =>
-        // Here we still invoke, but return 0 if sucessful (no exceptions).
-        mainMethod.invoke(null, configuration.arguments)
-        PlainApplication.Exit(0)
-    } catch {
+    try
+      mainMethod.getReturnType match {
+        case ExitClass =>
+          mainMethod.invoke(null, configuration.arguments).asInstanceOf[xsbti.Exit]
+        case IntClass =>
+          PlainApplication.Exit(mainMethod.invoke(null, configuration.arguments).asInstanceOf[Int])
+        case _ =>
+          // Here we still invoke, but return 0 if sucessful (no exceptions).
+          mainMethod.invoke(null, configuration.arguments)
+          PlainApplication.Exit(0)
+      }
+    catch {
       // This is only thrown if the underlying reflective call throws.
       // Let's expose the underlying error.
       case e: java.lang.reflect.InvocationTargetException if e.getCause != null =>

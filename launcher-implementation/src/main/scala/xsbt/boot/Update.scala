@@ -77,7 +77,7 @@ final class UpdateResult(
   def this(success: Boolean, scalaVersion: Option[String]) = this(success, scalaVersion, None)
 }
 
-/** Ensures that the Scala and application jars exist for the given versions or else downloads them.*/
+/** Ensures that the Scala and application jars exist for the given versions or else downloads them. */
 final class Update(config: UpdateConfiguration) {
   import config.{
     bootDirectory,
@@ -97,9 +97,9 @@ final class Update(config: UpdateConfiguration) {
   private def addCredentials(): Unit = {
     val optionProps =
       Option(System.getProperty("sbt.boot.credentials")) orElse
-        Option(System.getenv("SBT_CREDENTIALS")) map (
-          path => Pre.readProperties(new File(substituteTilde(path)))
-      )
+        Option(System.getenv("SBT_CREDENTIALS")) map (path =>
+          Pre.readProperties(new File(substituteTilde(path)))
+        )
     optionProps match {
       case Some(props) => extractCredentials(("realm", "host", "user", "password"))(props)
       case None        => ()
@@ -148,7 +148,7 @@ final class Update(config: UpdateConfiguration) {
     val useCousier = x match {
       case Some("true") | Some("1") => true
       case Some(_)                  => false
-      case None =>
+      case None                     =>
         target match {
           // https://github.com/sbt/sbt/issues/6447
           case u: UpdateApp
@@ -248,7 +248,7 @@ final class Update(config: UpdateConfiguration) {
       case u: UpdateApp =>
         val app = u.id
         val resolvedName = (app.crossVersioned, scalaVersion) match {
-          case (xsbti.CrossValue.Full, Some(sv)) => app.getName + "_" + sv
+          case (xsbti.CrossValue.Full, Some(sv))   => app.getName + "_" + sv
           case (xsbti.CrossValue.Binary, Some(sv)) =>
             app.getName + "_" + CrossVersionUtil.binaryScalaVersion(sv)
           case _ => app.getName
@@ -537,7 +537,7 @@ final class Update(config: UpdateConfiguration) {
     }
   }
 
-  /** Uses the pattern defined in BuildConfiguration to download sbt from Google code.*/
+  /** Uses the pattern defined in BuildConfiguration to download sbt from Google code. */
   private def urlResolver(
       id: String,
       base: String,
@@ -575,7 +575,7 @@ final class Update(config: UpdateConfiguration) {
       false
     )
 
-  /** Creates a maven-style resolver.*/
+  /** Creates a maven-style resolver. */
   private def mavenResolver(name: String, root: String, allowInsecureProtocol: Boolean) = {
     val resolver = new IBiblioResolver
     resolver.setName(name)
@@ -601,10 +601,10 @@ final class Update(config: UpdateConfiguration) {
   }
   private def centralRepositoryRoot: String = "https://repo1.maven.org/maven2/"
 
-  /** Creates a resolver for Maven Central.*/
+  /** Creates a resolver for Maven Central. */
   private def mavenMainResolver = defaultMavenResolver("Maven Central")
 
-  /** Creates a maven-style resolver with the default root.*/
+  /** Creates a maven-style resolver with the default root. */
   private def defaultMavenResolver(name: String) =
     mavenResolver(name, centralRepositoryRoot, false)
   private def localResolver(ivyUserDirectory: String) = {
@@ -620,7 +620,8 @@ final class Update(config: UpdateConfiguration) {
     val m = SnapshotPattern.matcher(scalaVersion)
     if (m.matches) {
       val base = List(1, 2, 3).map(m.group).mkString(".")
-      val pattern = "https://oss.sonatype.org/content/repositories/snapshots/[organization]/[module]/" + base + "-SNAPSHOT/[artifact]-[revision](-[classifier]).[ext]"
+      val pattern =
+        "https://oss.sonatype.org/content/repositories/snapshots/[organization]/[module]/" + base + "-SNAPSHOT/[artifact]-[revision](-[classifier]).[ext]"
 
       val resolver = new URLResolver
       resolver.setName("Sonatype OSS Snapshots")

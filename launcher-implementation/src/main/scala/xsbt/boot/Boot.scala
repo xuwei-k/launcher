@@ -79,8 +79,8 @@ object Boot {
     catch {
       case b: BootException           => errorAndExit(b.toString)
       case r: xsbti.RetrieveException => errorAndExit(r.getMessage)
-      case r: xsbti.FullReload        => Some(new LauncherArguments(r.arguments.toList, false, false))
-      case e: Throwable =>
+      case r: xsbti.FullReload => Some(new LauncherArguments(r.arguments.toList, false, false))
+      case e: Throwable        =>
         e.printStackTrace
         errorAndExit(Pre.prefixError(e.toString))
     }

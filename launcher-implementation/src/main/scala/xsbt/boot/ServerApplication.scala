@@ -35,9 +35,12 @@ object ServerApplication {
 object ServerLocator {
   // TODO - Probably want to drop this to reduce classfile size
   private def locked[U](file: File)(f: => U): U = {
-    Locks(file, new java.util.concurrent.Callable[U] {
-      def call(): U = f
-    })
+    Locks(
+      file,
+      new java.util.concurrent.Callable[U] {
+        def call(): U = f
+      }
+    )
   }
   // We use the lock file they give us to write the server info.  However,
   // it seems we cannot both use the server info file for locking *and*
@@ -48,12 +51,12 @@ object ServerLocator {
   // Launch the process and read the port...
   def locate(currentDirectory: File, config: LaunchConfiguration): URI =
     config.serverConfig match {
-      case None => sys.error("no server lock file configured. cannot locate server.")
+      case None     => sys.error("no server lock file configured. cannot locate server.")
       case Some(sc) =>
         locked(makeLockFile(sc.lockFile)) {
           readProperties(sc.lockFile) match {
             case Some(uri) if isReachable(uri) => uri
-            case _ =>
+            case _                             =>
               val uri = ServerLauncher.startServer(currentDirectory, config)
               writeProperties(sc.lockFile, uri)
               uri
@@ -131,7 +134,7 @@ object ServerLauncher {
   def startServer(currentDirectory: File, config: LaunchConfiguration): URI = {
     val serverConfig = config.serverConfig match {
       case Some(c) => c
-      case None =>
+      case None    =>
         throw new RuntimeException(
           "logic failure: attempting to start a server that isn't configured to be a server. please report a bug."
         )
@@ -168,17 +171,19 @@ object ServerLauncher {
     )
     errorDumper.start()
     // Now we look for the URI synch value, and then make sure we close the output files.
-    try readUntilSynch(new java.io.BufferedReader(new java.io.InputStreamReader(stdout))) match {
-      case Some(uri) => uri
-      case _         =>
-        // attempt to get rid of the server (helps prevent hanging / stuck locks,
-        // though this is not reliable)
-        try process.destroy()
-        catch { case e: Exception => }
-        // block a second to try to get stuff from stderr
-        errorDumper.close(waitForErrors = true)
-        sys.error(s"failed to start server process in ${pb.directory} command line ${pb.command}")
-    } finally {
+    try
+      readUntilSynch(new java.io.BufferedReader(new java.io.InputStreamReader(stdout))) match {
+        case Some(uri) => uri
+        case _         =>
+          // attempt to get rid of the server (helps prevent hanging / stuck locks,
+          // though this is not reliable)
+          try process.destroy()
+          catch { case e: Exception => }
+          // block a second to try to get stuff from stderr
+          errorDumper.close(waitForErrors = true)
+          sys.error(s"failed to start server process in ${pb.directory} command line ${pb.command}")
+      }
+    finally {
       errorDumper.close(waitForErrors = false)
       stdout.close()
       // Do not close stderr here because on Windows that will block,

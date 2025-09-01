@@ -136,8 +136,8 @@ object Launch {
   /** The actual mechanism used to run a launched application. */
   def run(launcher: xsbti.Launcher)(config: RunConfiguration): xsbti.MainResult = {
     import config._
-    val appProvider
-        : xsbti.AppProvider = launcher.app(app, orNull(scalaVersion)) // takes ~40 ms when no update is required
+    val appProvider: xsbti.AppProvider =
+      launcher.app(app, orNull(scalaVersion)) // takes ~40 ms when no update is required
     val appConfig: xsbti.AppConfiguration =
       new AppConfiguration(toArray(arguments), workingDirectory, appProvider)
 
@@ -159,7 +159,7 @@ object Launch {
     run(config) match {
       case e: xsbti.Exit     => Some(e.code)
       case c: xsbti.Continue => None
-      case r: xsbti.Reboot =>
+      case r: xsbti.Reboot   =>
         launch(run)(
           new RunConfiguration(Option(r.scalaVersion), r.app, r.baseDirectory, r.arguments.toList)
         )
@@ -219,14 +219,15 @@ class Launch private[xsbt] (
 
   @nowarn
   private[this] val initLoader: ClassLoader = if (isWindows && !isCygwin) {
-    val version = sys.props.get(Configuration.SbtVersionProperty) orElse Configuration.guessSbtVersion
+    val version =
+      sys.props.get(Configuration.SbtVersionProperty) orElse Configuration.guessSbtVersion
     if (version.fold(false)(_.startsWith("0."))) jansiLoader(bootLoader) else bootLoader
   } else bootLoader
 
   private[this] val scalaProviderClassLoader = new AtomicReference(initLoader)
   def topLoader: ClassLoader = scalaProviderClassLoader.get()
-  private val scalaProviders = new Cache[(String, String), String, xsbti.ScalaProvider](
-    (x, y) => getScalaProvider(x._1, x._2, y, scalaProviderClassLoader.get)
+  private val scalaProviders = new Cache[(String, String), String, xsbti.ScalaProvider]((x, y) =>
+    getScalaProvider(x._1, x._2, y, scalaProviderClassLoader.get)
   )
 
   val updateLockFile = if (lockBoot) Some(new File(bootDirectory, "sbt.boot.lock")) else None
@@ -317,8 +318,10 @@ class Launch private[xsbt] (
         // set the Scala version of sbt 1.4.x series to 2.12.12 explicitly
         // since util-interface depends on Scala 2.13 by mistake
         // https://github.com/sbt/sbt/blob/v1.4.0/project/Dependencies.scala
-        if (id.groupID() == "org.scala-sbt" &&
-            id.name() == "sbt" && id.version().startsWith("1.4.")) Some("2.12.12")
+        if (
+          id.groupID() == "org.scala-sbt" &&
+          id.name() == "sbt" && id.version().startsWith("1.4.")
+        ) Some("2.12.12")
         else None
     }
     val app = appModule(id, explicitScalaVersion, true, "app")

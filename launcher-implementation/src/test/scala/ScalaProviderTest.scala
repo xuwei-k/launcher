@@ -92,8 +92,8 @@ object ScalaProviderTest extends verify.BasicTestSuite {
   private def createExtra(currentDirectory: File) = {
     val resourceDirectory = new File(currentDirectory, "resources")
     createDirectory(resourceDirectory)
-    testResources.foreach(
-      resource => touch(new File(resourceDirectory, resource.replace('/', File.separatorChar)))
+    testResources.foreach(resource =>
+      touch(new File(resourceDirectory, resource.replace('/', File.separatorChar)))
     )
     Array(resourceDirectory)
   }

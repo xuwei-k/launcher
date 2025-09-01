@@ -23,14 +23,14 @@ class Find(config: LaunchConfiguration) {
       search.tpe match {
         case Search.RootFirst => fromRoot.headOption
         case Search.Nearest   => fromRoot.lastOption
-        case Search.Only =>
+        case Search.Only      =>
           if (hasProject(current))
             Some(current)
           else
             fromRoot match {
               case Nil         => Some(current)
               case head :: Nil => Some(head)
-              case xs =>
+              case xs          =>
                 Console.err.println(
                   "[error] [launcher] search method is 'only' and multiple ancestor directories match:\n\t" + fromRoot
                     .mkString("\n\t")
@@ -55,7 +55,9 @@ object ResolvePaths {
   def apply(baseDirectory: File, f: File): File =
     if (f.isAbsolute) f
     else {
-      assert(baseDirectory.isDirectory) // if base directory is not a directory, URI.resolve will not work properly
+      assert(
+        baseDirectory.isDirectory
+      ) // if base directory is not a directory, URI.resolve will not work properly
       val uri = new URI(null, null, f.getPath, null)
       new File(baseDirectory.toURI.resolve(uri))
     }

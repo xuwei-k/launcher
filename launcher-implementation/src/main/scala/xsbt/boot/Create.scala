@@ -21,13 +21,13 @@ object Initialize {
       spec: List[AppProperty]
   ): Unit = {
     readLine(promptCreate + " (y/N" + (if (enableQuick) "/s" else "") + ") ") match {
-      case None => declined("")
+      case None       => declined("")
       case Some(line) =>
         line.toLowerCase(Locale.ENGLISH) match {
           case "y" | "yes"     => process(file, spec, selectCreate)
           case "s"             => process(file, spec, selectQuick)
           case "n" | "no" | "" => declined("")
-          case x =>
+          case x               =>
             Console.err.println("  '" + x + "' not understood.")
             create(file, promptCreate, enableQuick, spec)
         }
@@ -43,8 +43,10 @@ object Initialize {
   ): Unit = {
     val properties = readProperties(file)
     val uninitialized =
-      for (property <- appProperties; init <- select(property)
-           if properties.getProperty(property.name) == null)
+      for (
+        property <- appProperties; init <- select(property)
+        if properties.getProperty(property.name) == null
+      )
         yield initialize(properties, property.name, init)
     if (!uninitialized.isEmpty) writeProperties(properties, file, "")
   }
@@ -52,11 +54,11 @@ object Initialize {
   @nowarn
   def initialize(properties: Properties, name: String, init: PropertyInit): Unit = {
     init match {
-      case set: SetProperty => properties.setProperty(name, set.value)
+      case set: SetProperty       => properties.setProperty(name, set.value)
       case prompt: PromptProperty =>
         def noValue = declined("no value provided for " + prompt.label)
         readLine(prompt.label + prompt.default.toList.map(" [" + _ + "]").mkString + ": ") match {
-          case None => noValue
+          case None       => noValue
           case Some(line) =>
             val value =
               if (isEmpty(line)) orElse(prompt.default, noValue)

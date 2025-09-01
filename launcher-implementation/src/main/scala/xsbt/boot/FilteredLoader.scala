@@ -14,8 +14,10 @@ private[boot] final class BootFilteredLoader(parent: ClassLoader) extends ClassL
   @throws(classOf[ClassNotFoundException])
   override final def loadClass(className: String, resolve: Boolean): Class[_] = {
     // note that we allow xsbti.*
-    if (className.startsWith(ScalaPackage) || className.startsWith(IvyPackage) || className
-          .startsWith(SbtBootPackage) || className.startsWith(FjbgPackage))
+    if (
+      className.startsWith(ScalaPackage) || className.startsWith(IvyPackage) || className
+        .startsWith(SbtBootPackage) || className.startsWith(FjbgPackage)
+    )
       throw new ClassNotFoundException(className)
     else
       super.loadClass(className, resolve)

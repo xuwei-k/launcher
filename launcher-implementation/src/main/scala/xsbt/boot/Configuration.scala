@@ -47,8 +47,8 @@ object Configuration {
     }
   def setProperty(head: String): Unit = {
     head.split("=", 2) match {
-      case Array("")         => Console.err.println(s"[warn] [launcher] invalid system property '$head'")
-      case Array(key)        => sys.props += key -> ""
+      case Array("")  => Console.err.println(s"[warn] [launcher] invalid system property '$head'")
+      case Array(key) => sys.props += key -> ""
       case Array(key, value) => sys.props += key -> value
       case _                 => ()
     }
@@ -67,10 +67,12 @@ object Configuration {
   def configurationFromFile(path: String, baseDirectory: File): URL = {
     val pathURI = filePathURI(path)
     def resolve(against: URI): Option[URL] = {
-      val resolved = against.resolve(pathURI) // variant that accepts String doesn't properly escape (#725)
-      val exists = try {
-        (new File(resolved)).exists
-      } catch { case _: IllegalArgumentException => false }
+      val resolved =
+        against.resolve(pathURI) // variant that accepts String doesn't properly escape (#725)
+      val exists =
+        try {
+          (new File(resolved)).exists
+        } catch { case _: IllegalArgumentException => false }
       if (exists) Some(resolved.toURL) else None
     }
     val against = resolveAgainst(baseDirectory)
@@ -110,7 +112,8 @@ object Configuration {
     if (m.matches())
       subPartsIndices flatMap { is =>
         fullMatchOnly(is.map(m.group))
-      } else
+      }
+    else
       noMatchParts
   }
   def noMatchParts: List[String] = DefaultVersionPart :: fallbackParts

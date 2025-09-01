@@ -53,7 +53,7 @@ object Transform {
   def transSourceSettings = Seq(
     inputSourceDirectory := sourceDirectory.value / "input_sources",
     inputSourceDirectories := Seq(inputSourceDirectory.value),
-    inputSources := (inputSourceDirectories.value ** (-DirectoryFilter)).get,
+    inputSources := (inputSourceDirectories.value ** (-DirectoryFilter)).get(),
     transformSources / fileMappings := transformSourceMappings.value,
     transformSources := {
       (transformSources / fileMappings).value.map {
@@ -82,7 +82,7 @@ object Transform {
   def transResourceSettings = Seq(
     inputResourceDirectory := sourceDirectory.value / "input_resources",
     inputResourceDirectories := Seq(inputResourceDirectory.value),
-    inputResources := (inputResourceDirectories.value ** (-DirectoryFilter)).get,
+    inputResources := (inputResourceDirectories.value ** (-DirectoryFilter)).get(),
     transformResources / fileMappings := transformResourceMappings.value,
     transformResources := {
       (transformResources / fileMappings).value.map {

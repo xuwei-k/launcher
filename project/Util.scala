@@ -15,16 +15,16 @@ object Util {
 
   def minProject(path: File, nameString: String) =
     Project(Project.normalizeModuleID(nameString), path)
-      .settings(commonSettings(nameString) ++ Release.javaVersionCheckSettings: _*)
-  def baseProject(path: File, nameString: String) = minProject(path, nameString) settings (base: _*)
+      .settings(commonSettings(nameString) ++ Release.javaVersionCheckSettings)
+  def baseProject(path: File, nameString: String) = minProject(path, nameString).settings(base)
 
   /** Configures a project to be java only. */
-  lazy val javaOnly = Seq[Setting[_]](
+  lazy val javaOnly = Seq[Setting[?]](
     /*crossPaths := false, */ compileOrder := CompileOrder.JavaThenScala,
     Compile / unmanagedSourceDirectories := Seq((Compile / javaSource).value),
     autoScalaLibrary := false
   )
-  lazy val base: Seq[Setting[_]] = baseScalacOptions ++ Licensed.settings
+  lazy val base: Seq[Setting[?]] = baseScalacOptions ++ Licensed.settings
   lazy val baseScalacOptions = Seq(
     scalacOptions ++= Seq("-Xelide-below", "0"),
     scalacOptions ++= {
@@ -47,7 +47,7 @@ object Util {
       }
     }
   )
-  lazy val minimalSettings: Seq[Setting[_]] = Defaults.paths ++ Seq[Setting[_]](
+  lazy val minimalSettings: Seq[Setting[?]] = Defaults.paths ++ Seq[Setting[?]](
     crossTarget := target.value,
     name := thisProject(_.id).value
   )
@@ -89,7 +89,7 @@ object Licensed {
   def seePaths(base: File, noticeString: String): Seq[File] =
     seeRegex.findAllIn(noticeString).matchData.map(d => licensePath(base, d.group(1))).toList
 
-  def settings: Seq[Setting[_]] = Seq(
+  def settings: Seq[Setting[?]] = Seq(
     notice := baseDirectory.value / "NOTICE",
     Compile / unmanagedResources ++= (notice.value +: extractLicenses.value),
     extractLicenses := extractLicenses0(

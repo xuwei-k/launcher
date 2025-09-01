@@ -3,7 +3,7 @@ import sbt.Keys._
 import sbt._
 
 object Release {
-  def settings: Seq[Setting[_]] = javaVersionCheckSettings
+  def settings: Seq[Setting[?]] = javaVersionCheckSettings
 
   // Validation for java verison
   def javaVersionCheckSettings = Seq(

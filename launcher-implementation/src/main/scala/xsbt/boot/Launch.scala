@@ -511,7 +511,7 @@ class Launch private[xsbt] (
       parentLoader: ClassLoader,
       scalaLibDir: File
   ): xsbti.ScalaProvider = new xsbti.ExtendedScalaProvider {
-    def launcher = Launch.this
+    def launcher: Launch = Launch.this
     def version = scalaVersion
 
     private object LoaderInit {

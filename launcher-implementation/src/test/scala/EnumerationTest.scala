@@ -17,19 +17,19 @@ object EnumerationTest extends Properties("Enumeration") {
     List(("A" -> a), ("B" -> b), ("C" -> c))
   }
 
-  def checkElements(enum: Enumeration, mapped: (String, Enumeration#Value)*) = {
-    val elements = enum.elements
+  def checkElements(`enum`: Enumeration, mapped: (String, Enumeration#Value)*) = {
+    val elements = `enum`.elements
     ("elements: " + elements) |:
       (mapped.forall { case (s, v) => elements.contains(v) } && (elements.length == mapped.length))
   }
-  def checkToValue(enum: Enumeration, mapped: (String, Enumeration#Value)*) = {
+  def checkToValue(`enum`: Enumeration, mapped: (String, Enumeration#Value)*) = {
     def invalid(s: String) =
       ("valueOf(" + s + ")") |:
-        Prop.throws(classOf[Exception])(enum.toValue(s))
+        Prop.throws(classOf[Exception])(`enum`.toValue(s))
     def valid(s: String, expected: Enumeration#Value) =
       ("valueOf(" + s + ")") |:
         ("Expected " + expected) |:
-        (enum.toValue(s) == expected)
+        (`enum`.toValue(s) == expected)
     val map = Map(mapped: _*)
     Prop.forAll(
       (s: String) =>

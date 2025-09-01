@@ -132,7 +132,7 @@ final class Update(config: UpdateConfiguration) {
   private lazy val ivy = {
     val ivy = new Ivy() {
       private val loggerEngine = new SbtMessageLoggerEngine;
-      override def getLoggerEngine = loggerEngine
+      override def getLoggerEngine: MessageLoggerEngine = loggerEngine
     }
     ivy.setSettings(settings)
     ivy.bind()

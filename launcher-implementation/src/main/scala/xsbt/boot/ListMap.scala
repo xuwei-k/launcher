@@ -22,7 +22,7 @@ sealed class ListMap[K, V] private (backing: List[(K, V)])
   def iterator = backing.reverse.iterator
   override def isEmpty: Boolean = backing.isEmpty
   override def toList = backing.reverse
-  override def toSeq = toList
+  override def toSeq: Seq[(K, V)] = toList
   protected def copy(newBacking: List[(K, V)]): ListMap[K, V] = new ListMap(newBacking)
   def default(defaultF: K => V): ListMap[K, V] =
     new ListMap[K, V](backing) {

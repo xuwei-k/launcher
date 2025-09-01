@@ -42,7 +42,7 @@ object Util {
     },
     scalacOptions ++= {
       CrossVersion.partialVersion(scalaVersion.value) match {
-        case Some((2, 13)) => Seq("-deprecation", "-Xlint")
+        case Some((2, 13)) => Seq("-deprecation", "-Xlint", "-Xsource:3")
         case _             => Seq()
       }
     }

@@ -42,17 +42,18 @@ private[xsbt] class ParallelResolveEngine(
     }
     // Farm out the dependencies for parallel download
     implicit val ec = ParallelResolveEngine.resolveExecutionContext
-    val allDownloadsFuture = Future.traverse(report.getDependencies.asScala) {
-      case dep: IvyNode =>
-        Future {
-          if (!(dep.isCompletelyEvicted || dep.hasProblem) &&
-              dep.getModuleRevision != null) {
-            Some(downloadNodeArtifacts(dep, artifactFilter, options))
-          } else None
-        }
+    val allDownloadsFuture = Future.traverse(report.getDependencies.asScala) { case dep: IvyNode =>
+      Future {
+        if (
+          !(dep.isCompletelyEvicted || dep.hasProblem) &&
+          dep.getModuleRevision != null
+        ) {
+          Some(downloadNodeArtifacts(dep, artifactFilter, options))
+        } else None
+      }
     }
     val allDownloads = Await.result(allDownloadsFuture, Duration.Inf)
-    //compute total downloaded size
+    // compute total downloaded size
     val totalSize = allDownloads.foldLeft(0L) {
       case (size, Some(download)) =>
         val dependency = download.dep
@@ -61,8 +62,10 @@ private[xsbt] class ParallelResolveEngine(
           val configurationReport = report.getConfigurationReport(configuration)
 
           // Take into account artifacts required by the given configuration
-          if (dependency.isEvicted(configuration) ||
-              dependency.isBlacklisted(configuration)) {
+          if (
+            dependency.isEvicted(configuration) ||
+            dependency.isBlacklisted(configuration)
+          ) {
             configurationReport.addDependency(dependency)
           } else configurationReport.addDependency(dependency, download.report)
         }

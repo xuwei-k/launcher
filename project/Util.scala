@@ -30,7 +30,7 @@ object Util {
     scalacOptions ++= {
       CrossVersion.partialVersion(scalaVersion.value) match {
         case Some((2, 9)) => Nil // support 2.9 for some subprojects for the Scala Eclipse IDE
-        case _ =>
+        case _            =>
           Seq(
             "-feature",
             "-language:implicitConversions",
@@ -66,7 +66,9 @@ object Util {
     val timestamp = formatter.format(new Date)
     val content = versionLine(version) + "\ntimestamp=" + timestamp
     val f = dir / fileName
-    if (!f.exists || f.lastModified < lastCompilationTime(analysis) || !containsVersion(f, version)) {
+    if (
+      !f.exists || f.lastModified < lastCompilationTime(analysis) || !containsVersion(f, version)
+    ) {
       s.log.info("Writing version information to " + f + " :\n" + content)
       IO.write(f, content)
     }

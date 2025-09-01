@@ -136,7 +136,9 @@ class ConfigurationParser {
 
   def toFiles(paths: List[String]): List[File] = paths.map(toFile)
   def toFile(path: String): File =
-    new File(substituteVariables(path).replace('/', File.separatorChar)) // if the path is relative, it will be resolved by Launch later
+    new File(
+      substituteVariables(path).replace('/', File.separatorChar)
+    ) // if the path is relative, it will be resolved by Launch later
   def file(map: LabelMap, name: String, default: File): (File, LabelMap) =
     (orElse(getOrNone(map, name).map(toFile), default), map - name)
   def optfile(map: LabelMap, name: String): (Option[File], LabelMap) =
@@ -213,14 +215,15 @@ class ConfigurationParser {
     m.toList.map {
       case (key, None)           => Predefined(key)
       case (key, Some(BootOnly)) => Predefined(key, true)
-      case (key, Some(value)) =>
+      case (key, Some(value))    =>
         val r = trim(substituteVariables(value).split(",", 8))
-        val url = try {
-          new URL(r(0))
-        } catch {
-          case e: MalformedURLException =>
-            Pre.error("invalid URL specified for '" + key + "': " + e.getMessage)
-        }
+        val url =
+          try {
+            new URL(r(0))
+          } catch {
+            case e: MalformedURLException =>
+              Pre.error("invalid URL specified for '" + key + "': " + e.getMessage)
+          }
         val (optionPart, patterns) = r.tail.partition(OptSet.contains(_))
         val options = (
           optionPart.contains(BootOnly),
@@ -270,7 +273,7 @@ class ConfigurationParser {
     }
   def parsePropertyDefinition(name: String)(value: String) = value.split("=", 2) match {
     case Array(mode, value) => (mode, parsePropertyValue(name, value)(defineProperty(name)))
-    case x                  => Pre.error("invalid property definition '" + x + "' for property '" + name + "'")
+    case x => Pre.error("invalid property definition '" + x + "' for property '" + name + "'")
   }
   def defineProperty(
       name: String
@@ -280,7 +283,8 @@ class ConfigurationParser {
       case "set"    => new SetProperty(requiredArg)
       case _        => Pre.error("unknown action '" + action + "' for property '" + name + "'")
     }
-  private[this] lazy val propertyPattern = Pattern.compile("""(.+)\((.*)\)(?:\[(.*)\])?""") // examples: prompt(Version)[1.0] or set(1.0)
+  private[this] lazy val propertyPattern =
+    Pattern.compile("""(.+)\((.*)\)(?:\[(.*)\])?""") // examples: prompt(Version)[1.0] or set(1.0)
   def parsePropertyValue[T](name: String, definition: String)(
       f: (String, String, Option[String]) => T
   ): T = {

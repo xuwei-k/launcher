@@ -12,11 +12,15 @@ class Enumeration extends Serializable {
     val c = getClass
     val correspondingFields = ListMap(c.getDeclaredFields.map(f => (f.getName, f)): _*)
     c.getMethods.toList flatMap { method =>
-      if (method.getParameterTypes.length == 0 && classOf[Value].isAssignableFrom(
-            method.getReturnType
-          )) {
-        for (field <- correspondingFields.get(method.getName)
-             if field.getType == method.getReturnType) yield method.invoke(this).asInstanceOf[Value]
+      if (
+        method.getParameterTypes.length == 0 && classOf[Value].isAssignableFrom(
+          method.getReturnType
+        )
+      ) {
+        for (
+          field <- correspondingFields.get(method.getName)
+          if field.getType == method.getReturnType
+        ) yield method.invoke(this).asInstanceOf[Value]
       } else
         Nil
     }

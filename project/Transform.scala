@@ -56,8 +56,8 @@ object Transform {
     inputSources := (inputSourceDirectories.value ** (-DirectoryFilter)).get,
     transformSources / fileMappings := transformSourceMappings.value,
     transformSources := {
-      (transformSources / fileMappings).value.map {
-        case (in, out) => transform(in, out, sourceProperties.value)
+      (transformSources / fileMappings).value.map { case (in, out) =>
+        transform(in, out, sourceProperties.value)
       }
     },
     sourceGenerators += transformSources.taskValue
@@ -85,8 +85,8 @@ object Transform {
     inputResources := (inputResourceDirectories.value ** (-DirectoryFilter)).get,
     transformResources / fileMappings := transformResourceMappings.value,
     transformResources := {
-      (transformResources / fileMappings).value.map {
-        case (in, out) => transform(in, out, resourceProperties.value)
+      (transformResources / fileMappings).value.map { case (in, out) =>
+        transform(in, out, resourceProperties.value)
       }
     },
     resourceGenerators += transformResources.taskValue

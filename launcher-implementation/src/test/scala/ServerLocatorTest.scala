@@ -39,8 +39,9 @@ object ServerLocatorTest extends verify.BasicTestSuite {
                     |${ServerApplication.SERVER_SYNCH_TEXT}${expected.toASCIIString}
                     |Some more output.""".stripMargin
     val inputStream = new java.io.BufferedReader(new java.io.StringReader(input))
-    val result = try ServerLauncher.readUntilSynch(inputStream)
-    finally inputStream.close()
+    val result =
+      try ServerLauncher.readUntilSynch(inputStream)
+      finally inputStream.close()
     assert(result == Some(expected))
   }
 }

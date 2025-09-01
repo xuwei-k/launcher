@@ -31,12 +31,11 @@ object EnumerationTest extends Properties("Enumeration") {
         ("Expected " + expected) |:
         (enum.toValue(s) == expected)
     val map = Map(mapped: _*)
-    Prop.forAll(
-      (s: String) =>
-        map.get(s) match {
-          case Some(v) => valid(s, v)
-          case None    => invalid(s)
-        }
+    Prop.forAll((s: String) =>
+      map.get(s) match {
+        case Some(v) => valid(s, v)
+        case None    => invalid(s)
+      }
     )
   }
   object MultiEnum extends Enumeration {

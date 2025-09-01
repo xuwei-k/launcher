@@ -53,7 +53,7 @@ class CousierUpdate(config: UpdateConfiguration) {
       .orElse(sys.env.get("COURSIER_CACHE").map(absoluteFile))
       .orElse(sys.props.get("coursier.cache").map(absoluteFile)) match {
       case Some(dir) => dir
-      case _ =>
+      case _         =>
         if (isWindows) windowsCacheDirectory
         else CacheDefaults.location
     }
@@ -128,7 +128,7 @@ class CousierUpdate(config: UpdateConfiguration) {
       case u: UpdateApp =>
         val app = u.id
         val resolvedName = (app.crossVersioned, scalaVersion) match {
-          case (xsbti.CrossValue.Full, Some(sv)) => app.getName + "_" + sv
+          case (xsbti.CrossValue.Full, Some(sv))   => app.getName + "_" + sv
           case (xsbti.CrossValue.Binary, Some(sv)) =>
             app.getName + "_" + CrossVersionUtil.binaryScalaVersion(sv)
           case _ => app.getName
@@ -273,9 +273,9 @@ class CousierUpdate(config: UpdateConfiguration) {
   def bootCredentials = {
     val optionProps =
       Option(System.getProperty("sbt.boot.credentials")) orElse
-        Option(System.getenv("SBT_CREDENTIALS")) map (
-          path => Pre.readProperties(new File(substituteTilde(path)))
-      )
+        Option(System.getenv("SBT_CREDENTIALS")) map (path =>
+          Pre.readProperties(new File(substituteTilde(path)))
+        )
     def extractCredentials(
         keys: (String, String, String, String)
     )(props: Properties): Option[DirectCredentials] = {
@@ -348,7 +348,7 @@ class CousierUpdate(config: UpdateConfiguration) {
     MavenRepository(root)
   }
 
-  /** Uses the pattern defined in BuildConfiguration to download sbt from Google code.*/
+  /** Uses the pattern defined in BuildConfiguration to download sbt from Google code. */
   private def ivyRepository(
       id: String,
       base: String,

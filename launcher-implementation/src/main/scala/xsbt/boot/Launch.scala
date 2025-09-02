@@ -480,7 +480,7 @@ class Launch private[xsbt] (
       lazy val loader = app.createLoader(scalaProvider.loader)
       // TODO - For some reason we can't call this from vanilla scala.  We get a
       // no such method exception UNLESS we're in the same project.
-      lazy val entryPoint: Class[T] forSome { type T } = {
+      lazy val entryPoint: Class[?] = {
         val c = Class.forName(id.mainClass, true, loader)
         if (ServerApplication.isServerApplication(c)) c
         else if (classOf[xsbti.AppMain].isAssignableFrom(c)) c
@@ -492,7 +492,7 @@ class Launch private[xsbt] (
           )
       }
       // Deprecated API.  Remove when we can.
-      def mainClass: Class[T] forSome { type T <: xsbti.AppMain } =
+      def mainClass: Class[? <: xsbti.AppMain] =
         entryPoint.asSubclass(AppMainClass)
       def newMain(): xsbti.AppMain = {
         if (ServerApplication.isServerApplication(entryPoint)) ServerApplication(this)

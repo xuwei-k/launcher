@@ -176,7 +176,6 @@ lazy val testSamples = (project in file("test-sample"))
     mimaFailOnNoPrevious := false
     publish := { () }
     publishSigned := { () }
-    libraryDependencies += scalaCompiler.value
   })
 
 ThisBuild / organization := "org.scala-sbt"

@@ -34,7 +34,9 @@ final class ResolveValues(conf: LaunchConfiguration) {
     v match {
       case e: Explicit[t] => e.value
       case i: Implicit[t] =>
-        trim(properties.getProperty(i.name)) map read orElse
-          i.default getOrElse ("no " + i.name + " specified in " + propertiesFile)
+        trim(properties.getProperty(i.name))
+          .map(read)
+          .orElse(i.default)
+          .getOrElse(read("no " + i.name + " specified in " + propertiesFile))
     }
 }

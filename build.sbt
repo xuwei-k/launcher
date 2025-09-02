@@ -14,7 +14,7 @@ ThisBuild / version := {
   else orig
 }
 ThisBuild / description := "Standalone launcher for maven/ivy deployed projects"
-ThisBuild / scalaVersion := "2.13.16"
+ThisBuild / scalaVersion := "3.3.6"
 ThisBuild / publishMavenStyle := true
 ThisBuild / crossPaths := false
 ThisBuild / resolvers += Resolver.typesafeIvyRepo("releases")

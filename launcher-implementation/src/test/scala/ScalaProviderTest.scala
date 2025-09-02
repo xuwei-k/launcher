@@ -5,6 +5,7 @@ import java.util.Properties
 import xsbti.{ Repository => _, Launcher => _, _ }
 import LaunchTest._
 import sbt.io.IO.{ createDirectory, touch, withTemporaryDirectory }
+import scala.reflect.Selectable.reflectiveSelectable
 
 object ScalaProviderTest extends verify.BasicTestSuite {
   test("Launch should provide ClassLoader for Scala 2.10.7") {

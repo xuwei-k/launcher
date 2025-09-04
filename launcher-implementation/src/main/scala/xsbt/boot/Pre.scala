@@ -12,20 +12,20 @@ import scala.reflect.ClassTag
 object Pre {
   def readLine(prompt: String): Option[String] = {
     val c = System.console()
-    if (c eq null) None else Option(c.readLine(prompt))
+    if c eq null then None else Option(c.readLine(prompt))
   }
   def trimLeading(line: String) = {
     def newStart(i: Int): Int =
-      if (i >= line.length || !Character.isWhitespace(line.charAt(i))) i else newStart(i + 1)
+      if i >= line.length || !Character.isWhitespace(line.charAt(i)) then i else newStart(i + 1)
     line.substring(newStart(0))
   }
   def isEmpty(line: String) = line.length == 0
   def isNonEmpty(line: String) = line.length > 0
   def assert(condition: Boolean, msg: => String): Unit =
-    if (!condition) throw new AssertionError(msg)
+    if !condition then throw new AssertionError(msg)
   def assert(condition: Boolean): Unit = assert(condition, "assertion failed")
   def require(condition: Boolean, msg: => String): Unit =
-    if (!condition) throw new IllegalArgumentException(msg)
+    if !condition then throw new IllegalArgumentException(msg)
   def error(msg: String): Nothing = throw new BootException(prefixError(msg))
   def declined(msg: String): Nothing = throw new BootException(msg)
   def prefixError(msg: String): String = "error during sbt launcher: " + msg
@@ -34,7 +34,7 @@ object Pre {
   def toArray[T: ClassTag](list: List[T]) = {
     val arr = new Array[T](list.length)
     def copy(i: Int, rem: List[T]): Unit =
-      if (i < arr.length) {
+      if i < arr.length then {
         arr(i) = rem.head
         copy(i + 1, rem.tail)
       }
@@ -50,9 +50,9 @@ object Pre {
   }
   def array(files: File*): Array[File] = toArray(files.toList)
   /* Saves creating a closure for default if it has already been evaluated*/
-  def orElse[T](opt: Option[T], default: T) = if (opt.isDefined) opt.get else default
+  def orElse[T](opt: Option[T], default: T) = if opt.isDefined then opt.get else default
 
-  def wrapNull(a: Array[File]): Array[File] = if (a == null) new Array[File](0) else a
+  def wrapNull(a: Array[File]): Array[File] = if a == null then new Array[File](0) else a
   def const[B](b: B): Any => B = _ => b
   def strictOr[T](a: Option[T], b: Option[T]): Option[T] = a match { case None => b; case _ => a }
   def getOrError[T](a: Option[T], msg: String): T = a match {
@@ -80,11 +80,11 @@ object Pre {
     } catch { case _: java.net.URISyntaxException => new File(url.getPath) }
 
   def delete(f: File): Unit = {
-    if (f.isDirectory) {
+    if f.isDirectory then {
       val fs = f.listFiles()
-      if (fs ne null) fs foreach delete
+      if fs ne null then fs foreach delete
     }
-    if (f.exists) f.delete()
+    if f.exists then f.delete()
     ()
   }
   final val isWindows: Boolean =
@@ -98,8 +98,7 @@ object Pre {
   import java.io.{ FileInputStream, FileOutputStream }
   private[boot] def readProperties(propertiesFile: File) = {
     val properties = new Properties
-    if (propertiesFile.exists)
-      Using(new FileInputStream(propertiesFile))(properties.load)
+    if propertiesFile.exists then Using(new FileInputStream(propertiesFile))(properties.load)
     properties
   }
   private[boot] def writeProperties(properties: Properties, file: File, msg: String): Unit = {
@@ -108,7 +107,7 @@ object Pre {
   }
   private[boot] def setSystemProperties(properties: Properties): Unit = {
     val nameItr = properties.stringPropertyNames.iterator
-    while (nameItr.hasNext) {
+    while nameItr.hasNext do {
       val propName = nameItr.next
       System.setProperty(propName, properties.getProperty(propName))
     }

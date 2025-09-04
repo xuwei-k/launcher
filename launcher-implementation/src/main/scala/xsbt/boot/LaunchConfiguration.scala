@@ -3,7 +3,7 @@
  */
 package xsbt.boot
 
-import Pre._
+import Pre.*
 import java.io.File
 import java.net.URL
 import scala.annotation.nowarn
@@ -22,7 +22,7 @@ final case class LaunchConfiguration(
   def isServer: Boolean = serverConfig.isDefined
   def getScalaVersion = {
     val sv = Value.get(scalaVersion)
-    if (sv == "auto") None else Some(sv)
+    if sv == "auto" then None else Some(sv)
   }
 
   def withScalaVersion(newScalaVersion: String) =
@@ -130,7 +130,7 @@ object Value {
   def readImplied[T](s: String, name: String, default: Option[String])(implicit
       read: String => T
   ): Value[T] =
-    if (s == "read") new Implicit(name, default map read)
+    if s == "read" then new Implicit(name, default map read)
     else Pre.error("expected 'read', got '" + s + "'")
 }
 
@@ -184,7 +184,7 @@ final case class AppID(
 
 object Application {
   def apply(id: xsbti.ApplicationID): Application = {
-    import id._
+    import id.*
     Application(
       groupID,
       new Explicit(name),
@@ -203,7 +203,7 @@ object Application {
       case _: AbstractMethodError =>
         // Before 0.13 this method did not exist on application, so we need to provide a default value
         // in the event we're dealing with an older Application.
-        if (id.crossVersioned) xsbti.CrossValue.Binary
+        if id.crossVersioned then xsbti.CrossValue.Binary
         else xsbti.CrossValue.Disabled
     }
 }
@@ -281,9 +281,9 @@ final class PromptProperty(val label: String, val default: Option[String]) exten
 
 final class Logging(level: LogLevel.Value) extends Serializable {
   def log(s: => String, at: LogLevel.Value) =
-    if (level.id <= at.id) stream(at).println("[" + at + "] " + s)
+    if level.id <= at.id then stream(at).println("[" + at + "] " + s)
   def debug(s: => String) = log(s, LogLevel.Debug)
-  private def stream(at: LogLevel.Value) = if (at == LogLevel.Error) System.err else System.out
+  private def stream(at: LogLevel.Value) = if at == LogLevel.Error then System.err else System.out
 }
 object LogLevel extends Enumeration {
   val Debug = value("debug", 0)

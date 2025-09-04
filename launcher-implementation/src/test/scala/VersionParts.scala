@@ -1,7 +1,7 @@
 package xsbt.boot
 
-import org.scalacheck._
-import Prop._
+import org.scalacheck.*
+import Prop.*
 
 object VersionParts extends Properties("VersionParts") {
   property("Valid version, no qualifier") = Prop.forAll { (x0: Int, y0: Int, z0: Int) =>
@@ -36,7 +36,7 @@ object VersionParts extends Properties("VersionParts") {
         s"$x.$y-$q" ::
         s"$x.$y.$z.$q" ::
         Nil
-    all(strings.map(str => check(str, Configuration.noMatchParts)): _*)
+    all(strings.map(str => check(str, Configuration.noMatchParts))*)
   }
 
   private[this] def check(versionString: String, expectedParts: List[String]) = {
@@ -50,12 +50,12 @@ object VersionParts extends Properties("VersionParts") {
 
   // Make `i` non-negative
   private[this] def norm(i: Int): Int =
-    if (i == Int.MinValue) Int.MaxValue else math.abs(i)
+    if i == Int.MinValue then Int.MaxValue else math.abs(i)
 
   // Make `s` non-empty and suitable for java.util.regex input
   private[this] def normS(s: String): String = {
     val filtered = s filter validChar
-    if (filtered.isEmpty) "q" else filtered
+    if filtered.isEmpty then "q" else filtered
   }
 
   // strip whitespace and characters not supported by Pattern

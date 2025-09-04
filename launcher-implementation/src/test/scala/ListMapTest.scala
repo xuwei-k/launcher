@@ -1,15 +1,15 @@
 package xsbt.boot
 
-import org.scalacheck._
+import org.scalacheck.*
 
 object ListMapProperties extends Properties("ListMap") {
   implicit val genListMap: Arbitrary[ListMap[Int, Int]] = Arbitrary(
-    for (list <- Arbitrary.arbitrary[List[(Int, Int)]]) yield ListMap(list: _*)
+    for (list <- Arbitrary.arbitrary[List[(Int, Int)]]) yield ListMap(list*)
   )
 
   property("ListMap from List contains all members of that List") = Prop.forAll {
     (list: List[(Int, Int)]) =>
-      val map = ListMap(list: _*)
+      val map = ListMap(list*)
       list forall { entry =>
         map contains entry._1
       }

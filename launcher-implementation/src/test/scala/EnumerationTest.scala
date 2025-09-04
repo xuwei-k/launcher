@@ -1,11 +1,11 @@
 package xsbt.boot
 
-import org.scalacheck._
-import Prop.{ Exception => _, _ }
+import org.scalacheck.*
+import Prop.{ Exception as _, * }
 
 object EnumerationTest extends Properties("Enumeration") {
-  property("MultiEnum.toValue") = checkToValue(MultiEnum, multiElements: _*)
-  property("MultiEnum.elements") = checkElements(MultiEnum, multiElements: _*)
+  property("MultiEnum.toValue") = checkToValue(MultiEnum, multiElements*)
+  property("MultiEnum.elements") = checkElements(MultiEnum, multiElements*)
   property("EmptyEnum.toValue") = checkToValue(EmptyEnum)
   property("EmptyEnum.elements") = EmptyEnum.elements.isEmpty
   property("SingleEnum.toValue") = checkToValue(SingleEnum, singleElements)
@@ -30,7 +30,7 @@ object EnumerationTest extends Properties("Enumeration") {
       ("valueOf(" + s + ")") |:
         ("Expected " + expected) |:
         (`enum`.toValue(s) == expected)
-    val map = Map(mapped: _*)
+    val map = Map(mapped*)
     Prop.forAll((s: String) =>
       map.get(s) match {
         case Some(v) => valid(s, v)

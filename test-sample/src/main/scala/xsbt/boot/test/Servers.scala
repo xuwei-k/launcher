@@ -17,18 +17,19 @@ class EchoServer extends xsbti.ServerMain {
       object serverThread extends Thread {
         private val running = new java.util.concurrent.atomic.AtomicBoolean(true)
         override def run(): Unit = {
-          while (running.get) try {
-            val clientSocket = serverSocket.accept()
-            // Handle client connections
-            object clientSocketThread extends Thread {
-              override def run(): Unit = {
-                echoTo(clientSocket)
+          while running.get do
+            try {
+              val clientSocket = serverSocket.accept()
+              // Handle client connections
+              object clientSocketThread extends Thread {
+                override def run(): Unit = {
+                  echoTo(clientSocket)
+                }
               }
+              clientSocketThread.start()
+            } catch {
+              case e: SocketTimeoutException => // Ignore
             }
-            clientSocketThread.start()
-          } catch {
-            case e: SocketTimeoutException => // Ignore
-          }
         }
         // Simple mechanism to dump input to output.
         private def echoTo(socket: Socket): Unit = {
@@ -36,7 +37,7 @@ class EchoServer extends xsbti.ServerMain {
             new java.io.BufferedReader(new java.io.InputStreamReader(socket.getInputStream))
           val output =
             new java.io.BufferedWriter(new java.io.OutputStreamWriter(socket.getOutputStream))
-          import scala.util.control.Breaks._
+          import scala.util.control.Breaks.*
           try {
             // Lame way to break out.
             breakable {

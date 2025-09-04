@@ -1,7 +1,7 @@
 package xsbt.boot
 
-import org.scalacheck._
-import Prop._
+import org.scalacheck.*
+import Prop.*
 import java.io.File
 import sbt.io.IO.withTemporaryDirectory
 
@@ -44,7 +44,7 @@ object LocksTest extends Properties("Locks") {
   }
 
   private def spec(f: => Boolean): Prop = Prop { _ =>
-    Result(if (f) True else False)
+    Result(if f then True else False)
   }
 
   private def call[T](impl: => T) = new java.util.concurrent.Callable[T] { def call = impl }

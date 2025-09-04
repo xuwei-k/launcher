@@ -2,8 +2,8 @@ package xsbt.boot
 
 import java.io.{ File, InputStream }
 import java.util.Properties
-import xsbti.{ Repository => _, Launcher => _, _ }
-import LaunchTest._
+import xsbti.{ Repository as _, Launcher as _, * }
+import LaunchTest.*
 import sbt.io.IO.{ createDirectory, touch, withTemporaryDirectory }
 
 object ScalaProviderTest extends verify.BasicTestSuite {
@@ -137,7 +137,7 @@ object LaunchTest {
       CrossValue.Disabled,
       extra
     )
-  import Predefined._
+  import Predefined.*
   def testRepositories =
     List(Local, MavenCentral, SonatypeOSSSnapshots).map(Repository.Predefined(_))
   def withLauncher[T](f: xsbti.Launcher => T): T =
@@ -148,7 +148,7 @@ object LaunchTest {
   val finalStyle = Set("2.9.1", "2.9.0-1", "2.9.0", "2.8.2", "2.8.1", "2.8.0")
   def unmapScalaVersion(versionNumber: String) = versionNumber.stripSuffix(".final")
   def mapScalaVersion(versionNumber: String) =
-    if (finalStyle(versionNumber)) versionNumber + ".final"
+    if finalStyle(versionNumber) then versionNumber + ".final"
     else versionNumber
 
   def getScalaVersion: String = "3.7.2" // getScalaVersion(getClass.getClassLoader)

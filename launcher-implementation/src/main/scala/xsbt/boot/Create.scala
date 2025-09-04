@@ -3,7 +3,7 @@
  */
 package xsbt.boot
 
-import Pre._
+import Pre.*
 import java.io.File
 import java.util.{ Locale, Properties }
 
@@ -20,7 +20,7 @@ object Initialize {
       enableQuick: Boolean,
       spec: List[AppProperty]
   ): Unit = {
-    readLine(promptCreate + " (y/N" + (if (enableQuick) "/s" else "") + ") ") match {
+    readLine(promptCreate + " (y/N" + (if enableQuick then "/s" else "") + ") ") match {
       case None       => declined("")
       case Some(line) =>
         line.toLowerCase(Locale.ENGLISH) match {
@@ -48,7 +48,7 @@ object Initialize {
         if properties.getProperty(property.name) == null
       )
         yield initialize(properties, property.name, init)
-    if (!uninitialized.isEmpty) writeProperties(properties, file, "")
+    if !uninitialized.isEmpty then writeProperties(properties, file, "")
   }
 
   @nowarn
@@ -61,7 +61,7 @@ object Initialize {
           case None       => noValue
           case Some(line) =>
             val value =
-              if (isEmpty(line)) orElse(prompt.default, noValue)
+              if isEmpty(line) then orElse(prompt.default, noValue)
               else line
             properties.setProperty(name, value)
         }

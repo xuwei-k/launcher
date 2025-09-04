@@ -24,10 +24,10 @@ object Boot {
   def standBy(): Unit = {
     import scala.concurrent.duration.Duration
     val x = System.getProperty("sbt.launcher.standby")
-    if (x == null) ()
+    if x == null then ()
     else {
       val sec = Duration(x).toSeconds
-      if (sec >= 1) {
+      if sec >= 1 then {
         (sec to 1 by -1) foreach { i =>
           Console.err.println(s"[info] [launcher] standing by: $i")
           Thread.sleep(1000)

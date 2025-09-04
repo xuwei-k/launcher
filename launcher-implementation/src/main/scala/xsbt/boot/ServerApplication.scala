@@ -4,12 +4,12 @@ package boot
 import java.io.File
 import java.net.URI
 import java.io.IOException
-import Pre._
+import Pre.*
 import scala.annotation.tailrec
 
 /** A wrapper around 'raw' static methods to meet the sbt application interface. */
 class ServerApplication private (provider: xsbti.AppProvider) extends xsbti.AppMain {
-  import ServerApplication._
+  import ServerApplication.*
 
   override def run(configuration: xsbti.AppConfiguration): xsbti.MainResult = {
     val serverMain =
@@ -102,13 +102,14 @@ class StreamDumper(in: java.io.BufferedReader, out: java.io.PrintStream) extends
   setDaemon(true)
   val endTime = new java.util.concurrent.atomic.AtomicLong(Long.MaxValue)
   override def run(): Unit = {
-    def read(): Unit = if (endTime.get > System.currentTimeMillis) in.readLine match {
-      case null => ()
-      case line =>
-        out.println(line)
-        out.flush()
-        read()
-    }
+    def read(): Unit = if endTime.get > System.currentTimeMillis then
+      in.readLine match {
+        case null => ()
+        case line =>
+          out.println(line)
+          out.flush()
+          read()
+      }
     read()
     out.close()
   }
@@ -117,13 +118,13 @@ class StreamDumper(in: java.io.BufferedReader, out: java.io.PrintStream) extends
     // closing "in" blocks forever on Windows, so don't do it;
     // just wait a couple seconds to read more stuff if there is
     // any stuff.
-    if (waitForErrors) {
+    if waitForErrors then {
       endTime.set(System.currentTimeMillis + 5000)
       // at this point we'd rather the dumper thread run
       // before we check whether to sleep
       Thread.`yield`()
       // let ourselves read more (thread should exit on earlier of endTime or EOF)
-      while (isAlive() && (endTime.get > System.currentTimeMillis)) Thread.sleep(50)
+      while isAlive() && (endTime.get > System.currentTimeMillis) do Thread.sleep(50)
     } else {
       endTime.set(System.currentTimeMillis)
     }
@@ -140,8 +141,7 @@ object ServerLauncher {
         )
     }
     val launchConfig = java.io.File.createTempFile("sbtlaunch", "config")
-    if (System.getenv("SBT_SERVER_SAVE_TEMPS") eq null)
-      launchConfig.deleteOnExit()
+    if System.getenv("SBT_SERVER_SAVE_TEMPS") eq null then launchConfig.deleteOnExit()
     LaunchConfiguration.save(config, launchConfig)
     val jvmArgs: List[String] = serverConfig.jvmArgs map readLines match {
       case Some(args) => args
@@ -157,7 +157,7 @@ object ServerLauncher {
   def launchProcessAndGetUri(cmd: List[String], cwd: File): URI = {
     // TODO - Handle windows path stupidity in arguments.
     val pb = new java.lang.ProcessBuilder()
-    pb.command(cmd: _*)
+    pb.command(cmd*)
     pb.directory(cwd)
     val process = pb.start()
     // First we need to grab all the input streams, and close the ones we don't care about.
@@ -195,7 +195,7 @@ object ServerLauncher {
 
   object ServerUriLine {
     def unapply(in: String): Option[URI] =
-      if (in startsWith SERVER_SYNCH_TEXT) {
+      if in startsWith SERVER_SYNCH_TEXT then {
         Some(new URI(in.substring(SERVER_SYNCH_TEXT.size)))
       } else None
   }
@@ -214,7 +214,7 @@ object ServerLauncher {
 
   /** Reads all the lines in a file. If it doesn't exist, returns an empty list.  Forces UTF-8 strings. */
   def readLines(f: File): List[String] =
-    if (!f.exists) Nil
+    if !f.exists then Nil
     else {
       val reader = new java.io.BufferedReader(
         new java.io.InputStreamReader(new java.io.FileInputStream(f), "UTF-8")

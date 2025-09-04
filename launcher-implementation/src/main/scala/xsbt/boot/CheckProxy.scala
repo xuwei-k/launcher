@@ -3,26 +3,24 @@
  */
 package xsbt.boot
 
-import Pre._
+import Pre.*
 import java.net.{ MalformedURLException, URL }
 
 object CheckProxy {
   def apply(): Unit = {
-    import ProxyProperties._
-    for (pp <- Seq(http, https, ftp))
-      setFromEnv(pp)
+    import ProxyProperties.*
+    for pp <- Seq(http, https, ftp) do setFromEnv(pp)
   }
 
   private[this] def setFromEnv(conf: ProxyProperties): Unit = {
-    import conf._
+    import conf.*
     val proxyURL = System.getenv(envURL)
-    if (isDefined(proxyURL) && !isPropertyDefined(sysHost) && !isPropertyDefined(sysPort)) {
+    if isDefined(proxyURL) && !isPropertyDefined(sysHost) && !isPropertyDefined(sysPort) then {
       try {
         val proxy = new URL(proxyURL)
         setProperty(sysHost, proxy.getHost)
         val port = proxy.getPort
-        if (port >= 0)
-          System.setProperty(sysPort, port.toString)
+        if port >= 0 then System.setProperty(sysPort, port.toString)
         copyEnv(envUser, sysUser)
         copyEnv(envPassword, sysPassword)
       } catch {
@@ -36,7 +34,7 @@ object CheckProxy {
     setProperty(sysKey, System.getenv(envKey))
   }
   private def setProperty(key: String, value: String): Unit = {
-    if (value != null) System.setProperty(key, value)
+    if value != null then System.setProperty(key, value)
     ()
   }
   private def isPropertyDefined(k: String) = isDefined(System.getProperty(k))

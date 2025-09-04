@@ -3,8 +3,8 @@ package xsbt.boot
 import org.apache.ivy.core.event.EventManager
 import org.apache.ivy.core.event.download.PrepareDownloadEvent
 import org.apache.ivy.core.module.descriptor.Artifact
-import org.apache.ivy.core.report._
-import org.apache.ivy.core.resolve._
+import org.apache.ivy.core.report.*
+import org.apache.ivy.core.resolve.*
 import org.apache.ivy.core.sort.SortEngine
 import org.apache.ivy.util.Message
 import org.apache.ivy.util.filter.Filter
@@ -34,7 +34,7 @@ private[xsbt] class ParallelResolveEngine(
       artifactFilter: Filter,
       options: DownloadOptions
   ): Unit = {
-    import scala.jdk.CollectionConverters._
+    import scala.jdk.CollectionConverters.*
     val start = System.currentTimeMillis
     report.getArtifacts match {
       case typed: java.util.List[Artifact @unchecked] =>
@@ -44,10 +44,9 @@ private[xsbt] class ParallelResolveEngine(
     implicit val ec = ParallelResolveEngine.resolveExecutionContext
     val allDownloadsFuture = Future.traverse(report.getDependencies.asScala) { case dep: IvyNode =>
       Future {
-        if (
-          !(dep.isCompletelyEvicted || dep.hasProblem) &&
+        if !(dep.isCompletelyEvicted || dep.hasProblem) &&
           dep.getModuleRevision != null
-        ) {
+        then {
           Some(downloadNodeArtifacts(dep, artifactFilter, options))
         } else None
       }
@@ -62,10 +61,9 @@ private[xsbt] class ParallelResolveEngine(
           val configurationReport = report.getConfigurationReport(configuration)
 
           // Take into account artifacts required by the given configuration
-          if (
-            dependency.isEvicted(configuration) ||
+          if dependency.isEvicted(configuration) ||
             dependency.isBlacklisted(configuration)
-          ) {
+          then {
             configurationReport.addDependency(dependency)
           } else configurationReport.addDependency(dependency, download.report)
         }
@@ -102,7 +100,7 @@ private[xsbt] class ParallelResolveEngine(
         case DownloadStatus.FAILED =>
           val artifact = artifactReport.getArtifact
           val mergedAttribute = artifact.getExtraAttribute("ivy:merged")
-          if (mergedAttribute != null) {
+          if mergedAttribute != null then {
             Message.warn(s"\tmissing merged artifact: $artifact, required by $mergedAttribute.")
           } else {
             Message.warn(s"\tdetected merged artifact: $artifactReport.")

@@ -41,7 +41,7 @@ object PlainApplication {
     try {
       val method =
         clazz.getMethod("main", classOf[Array[String]])
-      if (java.lang.reflect.Modifier.isStatic(method.getModifiers)) Some(method)
+      if java.lang.reflect.Modifier.isStatic(method.getModifiers) then Some(method)
       else None
     } catch {
       case n: NoSuchMethodException => None

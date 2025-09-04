@@ -3,26 +3,24 @@
  */
 package xsbt.boot
 
-import Pre._
+import Pre.*
 import scala.collection.immutable.List
 
 class Enumeration extends Serializable {
   def elements: List[Value] = members
   private lazy val members: List[Value] = {
     val c = getClass
-    val correspondingFields = ListMap(c.getDeclaredFields.map(f => (f.getName, f)): _*)
+    val correspondingFields = ListMap(c.getDeclaredFields.map(f => (f.getName, f))*)
     c.getMethods.toList flatMap { method =>
-      if (
-        method.getParameterTypes.length == 0 && classOf[Value].isAssignableFrom(
+      if method.getParameterTypes.length == 0 && classOf[Value].isAssignableFrom(
           method.getReturnType
         )
-      ) {
+      then {
         for (
           field <- correspondingFields.get(method.getName)
           if field.getType == method.getReturnType
         ) yield method.invoke(this).asInstanceOf[Value]
-      } else
-        Nil
+      } else Nil
     }
   }
   def value(s: String) = new Value(s, 0)

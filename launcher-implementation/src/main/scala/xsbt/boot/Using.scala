@@ -22,7 +22,7 @@ object Copy {
     toDirectory.mkdirs()
     val to = new File(toDirectory, file.getName)
     val missing = !to.exists
-    if (missing) {
+    if missing then {
       Using(new FileInputStream(file)) { in =>
         Using(new FileOutputStream(to)) { out =>
           transfer(in, out)
@@ -35,7 +35,7 @@ object Copy {
     val buffer = new Array[Byte](8192)
     def next(): Unit = {
       val read = in.read(buffer)
-      if (read > 0) {
+      if read > 0 then {
         out.write(buffer, 0, read)
         next()
       }

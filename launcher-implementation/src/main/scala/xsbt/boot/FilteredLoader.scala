@@ -14,13 +14,10 @@ private[boot] final class BootFilteredLoader(parent: ClassLoader) extends ClassL
   @throws(classOf[ClassNotFoundException])
   override final def loadClass(className: String, resolve: Boolean): Class[?] = {
     // note that we allow xsbti.*
-    if (
-      className.startsWith(ScalaPackage) || className.startsWith(IvyPackage) || className
+    if className.startsWith(ScalaPackage) || className.startsWith(IvyPackage) || className
         .startsWith(SbtBootPackage) || className.startsWith(FjbgPackage)
-    )
-      throw new ClassNotFoundException(className)
-    else
-      super.loadClass(className, resolve)
+    then throw new ClassNotFoundException(className)
+    else super.loadClass(className, resolve)
   }
   override def getResources(name: String) = excludedLoader.getResources(name)
   override def getResource(name: String) = excludedLoader.getResource(name)
@@ -34,7 +31,7 @@ private[boot] final class BootFilteredLoader(parent: ClassLoader) extends ClassL
 object Loaders {
   def apply(loader: ClassLoader): Stream[ClassLoader] = {
     def loaders(loader: ClassLoader, accum: Stream[ClassLoader]): Stream[ClassLoader] =
-      if (loader eq null) accum else loaders(loader.getParent, Stream.cons(loader, accum))
+      if loader eq null then accum else loaders(loader.getParent, Stream.cons(loader, accum))
     loaders(loader, Stream.empty)
   }
 }

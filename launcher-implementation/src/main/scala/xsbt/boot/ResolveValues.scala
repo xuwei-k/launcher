@@ -3,20 +3,20 @@
  */
 package xsbt.boot
 
-import Pre._
+import Pre.*
 
 object ResolveValues {
   def apply(conf: LaunchConfiguration): LaunchConfiguration = (new ResolveValues(conf))()
-  private def trim(s: String): Option[String] = if (s eq null) None else notEmpty(s.trim)
-  private def notEmpty(s: String): Option[String] = if (isEmpty(s)) None else Some(s)
+  private def trim(s: String): Option[String] = if s eq null then None else notEmpty(s.trim)
+  private def notEmpty(s: String): Option[String] = if isEmpty(s) then None else Some(s)
 }
 
-import ResolveValues.{ trim }
+import ResolveValues.trim
 final class ResolveValues(conf: LaunchConfiguration) {
   private def propertiesFile = conf.boot.properties
   private lazy val properties = readProperties(propertiesFile)
   def apply(): LaunchConfiguration = {
-    import conf._
+    import conf.*
     val scalaVersion = resolve(conf.scalaVersion)
     val appVersion = resolve(app.version)
     val appName = resolve(app.name)
@@ -34,7 +34,8 @@ final class ResolveValues(conf: LaunchConfiguration) {
     v match {
       case e: Explicit[t] => e.value
       case i: Implicit[t] =>
-        trim(properties.getProperty(i.name)).map(read)
+        trim(properties.getProperty(i.name))
+          .map(read)
           .orElse(i.default)
           .getOrElse(sys.error("no " + i.name + " specified in " + propertiesFile))
     }

@@ -3,7 +3,7 @@
  */
 package xsbt.boot
 
-import Pre._
+import Pre.*
 import java.io.{ File, FileWriter, PrintWriter }
 import java.util.concurrent.Callable
 import java.util.regex.Pattern
@@ -19,14 +19,14 @@ import core.cache.{
 import core.event.EventManager
 import core.module.id.{ ArtifactId, ModuleId, ModuleRevisionId }
 import core.module.descriptor.{
-  Configuration => IvyConfiguration,
+  Configuration as IvyConfiguration,
   DefaultDependencyArtifactDescriptor,
   DefaultDependencyDescriptor,
   DefaultModuleDescriptor,
   ModuleDescriptor
 }
 import core.module.descriptor.{
-  Artifact => IArtifact,
+  Artifact as IArtifact,
   DefaultExcludeRule,
   DependencyDescriptor,
   ExcludeRule
@@ -49,7 +49,7 @@ import util.{ DefaultMessageLogger, filter, Message, MessageLoggerEngine, url }
 import filter.Filter
 import url.CredentialsStore
 
-import BootConfiguration._
+import BootConfiguration.*
 
 sealed trait UpdateTarget { def tpe: String; def classifiers: List[String] }
 final class UpdateScala(val classifiers: List[String]) extends UpdateTarget { def tpe = "scala" }
@@ -113,7 +113,7 @@ final class Update(config: UpdateConfiguration) {
   )(props: Properties): Unit = {
     val List(realm, host, user, password) =
       keys.productIterator.map(key => props.getProperty(key.toString)).toList
-    if (realm != null && host != null && user != null && password != null)
+    if realm != null && host != null && user != null && password != null then
       CredentialsStore.INSTANCE.addCredentials(realm, host, user, password)
   }
   private lazy val settings = {
@@ -158,7 +158,7 @@ final class Update(config: UpdateConfiguration) {
           case _ => true
         }
     }
-    if (useCousier) coursierUpdate(target, reason)
+    if useCousier then coursierUpdate(target, reason)
     else {
       Message.setDefaultLogger(new SbtIvyLogger(logWriter))
       val action = new Callable[UpdateResult] { def call = lockedApply(target, reason) }
@@ -240,7 +240,7 @@ final class Update(config: UpdateConfiguration) {
             error("unsupported Scala version " + scalaVersion)
         }
         excludeJUnit(moduleID)
-        val scalaOrgString = if (scalaOrg != ScalaOrg) scalaOrg + " " else ""
+        val scalaOrgString = if scalaOrg != ScalaOrg then scalaOrg + " " else ""
         Console.err.println(
           s"[info] [launcher] getting ${scalaOrgString}Scala $scalaVersion ${reason}..."
         )
@@ -281,7 +281,7 @@ final class Update(config: UpdateConfiguration) {
     // will put them in the right version directory.
     val target1 = (depVersion, target) match {
       case (Some(dv), u: UpdateApp) =>
-        import u._; new UpdateApp(id.copy(version = new Explicit(dv)), classifiers, tpe)
+        import u.*; new UpdateApp(id.copy(version = new Explicit(dv)), classifiers, tpe)
       case _ => target
     }
     setScalaVariable(settings, autoScalaVersion)
@@ -307,10 +307,8 @@ final class Update(config: UpdateConfiguration) {
       false,
       true
     )
-    for (c <- conf.split(";"))
-      dep.addDependencyConfiguration(DefaultIvyConfiguration, c)
-    for (classifier <- classifiers)
-      addClassifier(dep, name, classifier)
+    for c <- conf.split(";") do dep.addDependencyConfiguration(DefaultIvyConfiguration, c)
+    for classifier <- classifiers do addClassifier(dep, name, classifier)
     moduleID.addDependency(dep)
     dep
   }
@@ -320,8 +318,7 @@ final class Update(config: UpdateConfiguration) {
       classifier: String
   ): Unit = {
     val extraMap = new java.util.HashMap[String, String]
-    if (!isEmpty(classifier))
-      extraMap.put("e:classifier", classifier)
+    if !isEmpty(classifier) then extraMap.put("e:classifier", classifier)
     val ivyArtifact = new DefaultDependencyArtifactDescriptor(
       dep,
       name,
@@ -330,8 +327,7 @@ final class Update(config: UpdateConfiguration) {
       null,
       extraMap
     )
-    for (conf <- dep.getModuleConfigurations)
-      dep.addDependencyArtifact(conf, ivyArtifact)
+    for conf <- dep.getModuleConfigurations do dep.addDependencyArtifact(conf, ivyArtifact)
   }
   private def excludeJUnit(module: DefaultModuleDescriptor): Unit =
     module.addExcludeRule(excludeRule(JUnitName, JUnitName))
@@ -359,7 +355,7 @@ final class Update(config: UpdateConfiguration) {
     resolveOptions.setCheckIfChanged(false)
     val resolveEngine = new ParallelResolveEngine(settings, eventManager, new SortEngine(settings))
     val resolveReport = resolveEngine.resolve(module, resolveOptions)
-    if (resolveReport.hasError) {
+    if resolveReport.hasError then {
       logExceptions(resolveReport)
       val seen = new java.util.LinkedHashSet[Any]
       seen.addAll(resolveReport.getAllProblemMessages)
@@ -383,17 +379,16 @@ final class Update(config: UpdateConfiguration) {
     modules collectFirst { case m if m.getModuleId.equals(dep) => m.getRevision }
   }
   private[this] def moduleRevisionIDs(report: ResolveReport): Seq[ModuleRevisionId] = {
-    import scala.jdk.CollectionConverters._
+    import scala.jdk.CollectionConverters.*
     import org.apache.ivy.core.resolve.IvyNode
     report.getDependencies.asInstanceOf[java.util.List[IvyNode]].asScala.toSeq map (_.getResolvedId)
   }
 
   /** Exceptions are logged to the update log file. */
   private def logExceptions(report: ResolveReport): Unit = {
-    for (unresolved <- report.getUnresolvedDependencies) {
+    for unresolved <- report.getUnresolvedDependencies do {
       val problem = unresolved.getProblem
-      if (problem != null)
-        problem.printStackTrace(logWriter)
+      if problem != null then problem.printStackTrace(logWriter)
     }
   }
   private final class ArtifactFilter(f: IArtifact => Boolean) extends Filter {
@@ -432,10 +427,10 @@ final class Update(config: UpdateConfiguration) {
   private def addResolvers(settings: IvySettings): Unit = {
     val newDefault = new ChainResolver {
       override def locate(artifact: IArtifact) =
-        if (hasImplicitClassifier(artifact)) null else super.locate(artifact)
+        if hasImplicitClassifier(artifact) then null else super.locate(artifact)
     }
     newDefault.setName("redefined-public")
-    if (repositories.isEmpty) error("no repositories defined")
+    if repositories.isEmpty then error("no repositories defined")
     for {
       repo <- repositories if includeRepo(repo)
       irepo <- toIvyRepositories(settings, repo)
@@ -446,7 +441,7 @@ final class Update(config: UpdateConfiguration) {
   }
   // infrastructure is needed to avoid duplication between this class and the ivy/ subproject
   private def hasImplicitClassifier(artifact: IArtifact): Boolean = {
-    import scala.jdk.CollectionConverters._
+    import scala.jdk.CollectionConverters.*
     artifact.getQualifiedExtraAttributes.asScala.keys.exists(_.asInstanceOf[String] startsWith "m:")
   }
   // exclude the local Maven repository for Scala -SNAPSHOTs
@@ -496,7 +491,7 @@ final class Update(config: UpdateConfiguration) {
       settings: IvySettings,
       repo: xsbti.Repository
   ): Seq[plugins.resolver.RepositoryResolver] = {
-    import xsbti.Predefined._
+    import xsbti.Predefined.*
     repo match {
       case m: xsbti.MavenRepository =>
         mavenResolver(m.id, m.url.toString, m.allowInsecureProtocol) :: Nil
@@ -554,20 +549,20 @@ final class Update(config: UpdateConfiguration) {
     resolver.addArtifactPattern(adjustPattern(base, artifactPattern))
     resolver.setM2compatible(mavenCompatible)
     resolver.setDescriptor(
-      if (descriptorOptional) BasicResolver.DESCRIPTOR_OPTIONAL
+      if descriptorOptional then BasicResolver.DESCRIPTOR_OPTIONAL
       else BasicResolver.DESCRIPTOR_REQUIRED
     )
     resolver.setCheckconsistency(!skipConsistencyCheck)
-    if (allowInsecureProtocol) ()
+    if allowInsecureProtocol then ()
     else {
-      if (isInsecureUrl(base)) {
+      if isInsecureUrl(base) then {
         warnHttp(base)
       }
     }
     resolver
   }
   private def adjustPattern(base: String, pattern: String): String =
-    (if (base.endsWith("/") || isEmpty(base)) base else (base + "/")) + pattern
+    (if base.endsWith("/") || isEmpty(base) then base else (base + "/")) + pattern
   private def mavenLocal =
     mavenResolver(
       "Maven2 Local",
@@ -581,7 +576,7 @@ final class Update(config: UpdateConfiguration) {
     resolver.setName(name)
     resolver.setM2compatible(true)
     resolver.setRoot(root)
-    if (!allowInsecureProtocol && isInsecureUrl(root)) {
+    if !allowInsecureProtocol && isInsecureUrl(root) then {
       warnHttp(root)
     }
     resolver
@@ -618,7 +613,7 @@ final class Update(config: UpdateConfiguration) {
   private val SnapshotPattern = Pattern.compile("""(\d+).(\d+).(\d+)-(\d{8})\.(\d{6})-(\d+|\+)""")
   private def scalaSnapshots(scalaVersion: String) = {
     val m = SnapshotPattern.matcher(scalaVersion)
-    if (m.matches) {
+    if m.matches then {
       val base = List(1, 2, 3).map(m.group).mkString(".")
       val pattern =
         "https://oss.sonatype.org/content/repositories/snapshots/[organization]/[module]/" + base + "-SNAPSHOT/[artifact]-[revision](-[classifier]).[ext]"
@@ -657,22 +652,22 @@ import SbtIvyLogger.{ acceptError, acceptMessage, isAlwaysIgnoreMessage }
 private final class SbtIvyLogger(logWriter: PrintWriter)
     extends DefaultMessageLogger(Message.MSG_INFO) {
   override def log(msg: String, level: Int): Unit =
-    if (isAlwaysIgnoreMessage(msg)) ()
+    if isAlwaysIgnoreMessage(msg) then ()
     else {
       logWriter.println(msg)
-      if (level <= getLevel && acceptMessage(msg)) {
+      if level <= getLevel && acceptMessage(msg) then {
         Console.err.println(msg)
       }
     }
   override def rawlog(msg: String, level: Int): Unit = { log(msg, level) }
 
   /** This is a hack to filter error messages about 'unknown resolver ...'. */
-  override def error(msg: String) = if (acceptError(msg)) super.error(msg)
+  override def error(msg: String) = if acceptError(msg) then super.error(msg)
 }
 private final class SbtMessageLoggerEngine extends MessageLoggerEngine {
 
   /** This is a hack to filter error messages about 'unknown resolver ...'. */
-  override def error(msg: String) = if (acceptError(msg)) super.error(msg)
+  override def error(msg: String) = if acceptError(msg) then super.error(msg)
 }
 private object SbtIvyLogger {
   val IgnorePrefix = "impossible to define"

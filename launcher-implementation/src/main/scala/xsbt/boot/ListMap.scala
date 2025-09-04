@@ -3,7 +3,7 @@
  */
 package xsbt.boot
 
-import Pre._
+import Pre.*
 import scala.collection.Iterable
 import scala.collection.immutable.List
 

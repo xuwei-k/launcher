@@ -1,11 +1,11 @@
 package xsbt.boot
 
 import java.io.File
-import java.util.Arrays.{ equals => arrEquals }
-import org.scalacheck._
+import java.util.Arrays.equals as arrEquals
+import org.scalacheck.*
 
 object PreTest extends Properties("Pre") {
-  import Pre._
+  import Pre.*
   property("isEmpty") = Prop.forAll((s: String) => (s.isEmpty == isEmpty(s)))
   property("isNonEmpty") = Prop.forAll((s: String) => (isEmpty(s) != isNonEmpty(s)))
   property("assert true") = { assert(true); true }
@@ -30,7 +30,7 @@ object PreTest extends Properties("Pre") {
     (a ++ b) sameElements concat(a, b)
   }
   property("array") = Prop.forAll(genFiles) { (a: Array[File]) =>
-    array(a.toList: _*) sameElements Array(a: _*)
+    array(a.toList*) sameElements Array(a*)
   }
   property("substituteTilde") = {
     val userHome = System.getProperty("user.home")

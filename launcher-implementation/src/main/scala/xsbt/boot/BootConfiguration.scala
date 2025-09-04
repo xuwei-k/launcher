@@ -99,15 +99,14 @@ private[boot] object BootConfiguration {
   /** The name of the directory in the boot directory to put all jars for the given version of scala in. */
   def baseDirectoryName(scalaOrg: String, scalaVersion: Option[String]) = scalaVersion match {
     case None     => "other"
-    case Some(sv) => (if (scalaOrg == ScalaOrg) "" else scalaOrg + ".") + ScalaVersionPrefix + sv
+    case Some(sv) => (if scalaOrg == ScalaOrg then "" else scalaOrg + ".") + ScalaVersionPrefix + sv
   }
 
   def extractScalaVersion(dir: File): Option[String] = {
     val name = dir.getName
-    if (name.contains(ScalaVersionPrefix))
+    if name.contains(ScalaVersionPrefix) then
       Some(name.substring(name.lastIndexOf(ScalaVersionPrefix) + ScalaVersionPrefix.length))
-    else
-      None
+    else None
   }
 }
 

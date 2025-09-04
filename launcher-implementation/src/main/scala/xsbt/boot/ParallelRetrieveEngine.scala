@@ -1,22 +1,22 @@
 package xsbt.boot
 
-import java.util.{ Set => julSet, Map => julMap }
+import java.util.{ Set as julSet, Map as julMap }
 import java.io.IOException
 import java.io.File
 import java.util.Arrays
 
 import org.apache.ivy.core.IvyContext
 import org.apache.ivy.core.event.EventManager
-import org.apache.ivy.core.report._
-import org.apache.ivy.core.retrieve._
-import org.apache.ivy.core.event.retrieve._
+import org.apache.ivy.core.report.*
+import org.apache.ivy.core.retrieve.*
+import org.apache.ivy.core.event.retrieve.*
 import org.apache.ivy.core.IvyPatternHelper
 import org.apache.ivy.core.LogOptions
 import org.apache.ivy.core.module.id.ModuleRevisionId
 import org.apache.ivy.util.Message
 import org.apache.ivy.util.FileUtil
 
-import scala.collection.mutable.{ Set => mSet }
+import scala.collection.mutable.Set as mSet
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ Await, Future }
 
@@ -44,7 +44,7 @@ private[xsbt] class ParallelRetrieveEngine(
     val report = new RetrieveReport()
 
     val moduleId = mrid.getModuleId()
-    if (LogOptions.LOG_DEFAULT.equals(options.getLog())) {
+    if LogOptions.LOG_DEFAULT.equals(options.getLog()) then {
       Message.info(":: retrieving :: " + moduleId)
     } else {
       Message.verbose(":: retrieving :: " + moduleId)
@@ -60,12 +60,12 @@ private[xsbt] class ParallelRetrieveEngine(
       IvyPatternHelper.substituteVariables(options.getDestIvyPattern(), settings.getVariables())
 
     val confs = getConfs(mrid, options)
-    if (LogOptions.LOG_DEFAULT.equals(options.getLog())) {
-      Message.info("\tconfs: " + Arrays.asList(confs: _*))
+    if LogOptions.LOG_DEFAULT.equals(options.getLog()) then {
+      Message.info("\tconfs: " + Arrays.asList(confs*))
     } else {
-      Message.verbose("\tconfs: " + Arrays.asList(confs: _*))
+      Message.verbose("\tconfs: " + Arrays.asList(confs*))
     }
-    if (eventManager != null) {
+    if eventManager != null then {
       eventManager.fireIvyEvent(new StartRetrieveEvent(mrid, confs, options))
     }
 
@@ -76,18 +76,18 @@ private[xsbt] class ParallelRetrieveEngine(
       report.setRetrieveRoot(fileRetrieveRoot)
 
       val _ =
-        if (destIvyPattern == null) null
+        if destIvyPattern == null then null
         else settings.resolveFile(IvyPatternHelper.getTokenRoot(destIvyPattern))
 
       implicit val ec = ParallelRetrieveEngine.retrieveExecutionContext
-      import scala.jdk.CollectionConverters._
+      import scala.jdk.CollectionConverters.*
       type ValueType = julSet[String]
       val allRetrivedFuture = artifactsToCopy.entrySet().asScala.map {
         case artifactAndPaths: julMap.Entry[ArtifactDownloadReport, ValueType] @unchecked =>
           val artifact: ArtifactDownloadReport = artifactAndPaths.getKey()
           val archive: File = artifact.getLocalFile()
 
-          if (archive == null) {
+          if archive == null then {
             Message.verbose("\tno local file available for " + artifact + ": skipping")
             Future { mSet[RetResult]() }
           } else {
@@ -114,10 +114,8 @@ private[xsbt] class ParallelRetrieveEngine(
         Await.result(Future.reduceLeft(allRetrivedFuture.toList)(_ ++ _), Duration.Inf)
 
       val totalCopiedSize = allRetrived.foldLeft(0L) { case (sum, ret) =>
-        if (ret.copied)
-          report.addCopiedFile(ret.destFile, ret.artifact)
-        else
-          report.addUpToDateFile(ret.destFile, ret.artifact)
+        if ret.copied then report.addCopiedFile(ret.destFile, ret.artifact)
+        else report.addUpToDateFile(ret.destFile, ret.artifact)
 
         sum + ret.totalSizeDownloaded
       }
@@ -125,20 +123,21 @@ private[xsbt] class ParallelRetrieveEngine(
       val elapsedTime = System.currentTimeMillis() - start
 
       val msg2 =
-        if (settings.isCheckUpToDate())
+        if settings.isCheckUpToDate() then
           (", " + report.getNbrArtifactsUpToDate() + " already retrieved")
         else
-          ("" + " (" + (totalCopiedSize / ParallelRetrieveEngine.KILO) + "kB/" + elapsedTime + "ms)")
+          ("" + " (" + (totalCopiedSize / ParallelRetrieveEngine.KILO) + "kB/" + elapsedTime + "ms)"
+        )
 
       val msg = "\t" + report.getNbrArtifactsCopied() + " artifacts copied" + msg2
 
-      if (LogOptions.LOG_DEFAULT.equals(options.getLog())) {
+      if LogOptions.LOG_DEFAULT.equals(options.getLog()) then {
         Message.info(msg)
       } else {
         Message.verbose(msg)
       }
       Message.verbose("\tretrieve done (" + (elapsedTime) + "ms)")
-      if (this.eventManager != null) {
+      if this.eventManager != null then {
         this.eventManager.fireIvyEvent(
           new EndRetrieveEvent(
             mrid,
@@ -168,12 +167,12 @@ private[xsbt] class ParallelRetrieveEngine(
       options: RetrieveOptions
   ): RetResult = {
     val destFile = settings.resolveFile(path)
-    if (!settings.isCheckUpToDate() || !upToDate(archive, destFile, options)) {
+    if !settings.isCheckUpToDate() || !upToDate(archive, destFile, options) then {
       Message.verbose("\t\tto " + destFile)
-      if (eventManager != null) {
+      if eventManager != null then {
         eventManager.fireIvyEvent(new StartRetrieveArtifactEvent(artifact, destFile))
       }
-      if (options.isMakeSymlinks()) {
+      if options.isMakeSymlinks() then {
         var symlinkCreated = false
         try {
           FileUtil.symlink(archive, destFile, null, true)
@@ -184,7 +183,7 @@ private[xsbt] class ParallelRetrieveEngine(
             // warn about the inability to create a symlink
             Message.warn("symlink creation failed at path " + destFile)
         }
-        if (!symlinkCreated) {
+        if !symlinkCreated then {
           // since symlink creation failed, let's attempt to an actual copy instead
           Message.info(
             "attempting a copy operation (since symlink creation failed) at path " + destFile
@@ -194,7 +193,7 @@ private[xsbt] class ParallelRetrieveEngine(
       } else {
         FileUtil.copy(archive, destFile, null, true);
       }
-      if (eventManager != null) {
+      if eventManager != null then {
         eventManager.fireIvyEvent(new EndRetrieveArtifactEvent(artifact, destFile))
       }
       val copiedSize = destFile.length()
@@ -210,7 +209,7 @@ private[xsbt] class ParallelRetrieveEngine(
 
   def getConfs(mrid: ModuleRevisionId, options: RetrieveOptions) = {
     var confs = options.getConfs()
-    if (confs == null || (confs.length == 1 && "*".equals(confs(0)))) {
+    if confs == null || (confs.length == 1 && "*".equals(confs(0))) then {
       try {
         val md = getCache().getResolvedModuleDescriptor(mrid)
         Message.verbose(
@@ -232,24 +231,24 @@ private[xsbt] class ParallelRetrieveEngine(
   def getCache() = settings.getResolutionCacheManager()
 
   def upToDate(source: File, target: File, options: RetrieveOptions): Boolean = {
-    if (!target.exists()) {
+    if !target.exists() then {
       return false
     }
 
     val overwriteMode = options.getOverwriteMode()
-    if (RetrieveOptions.OVERWRITEMODE_ALWAYS.equals(overwriteMode)) {
+    if RetrieveOptions.OVERWRITEMODE_ALWAYS.equals(overwriteMode) then {
       return false
     }
 
-    if (RetrieveOptions.OVERWRITEMODE_NEVER.equals(overwriteMode)) {
+    if RetrieveOptions.OVERWRITEMODE_NEVER.equals(overwriteMode) then {
       return true
     }
 
-    if (RetrieveOptions.OVERWRITEMODE_NEWER.equals(overwriteMode)) {
+    if RetrieveOptions.OVERWRITEMODE_NEWER.equals(overwriteMode) then {
       return source.lastModified() <= target.lastModified()
     }
 
-    if (RetrieveOptions.OVERWRITEMODE_DIFFERENT.equals(overwriteMode)) {
+    if RetrieveOptions.OVERWRITEMODE_DIFFERENT.equals(overwriteMode) then {
       return source.lastModified() == target.lastModified()
     }
 

@@ -33,7 +33,7 @@ object GetLocks {
 object Locks extends xsbti.GlobalLock {
   private[this] val locks = new Cache[File, Unit, GlobalLock]((f, _) => new GlobalLock(f))
   def apply[T](file: File, action: Callable[T]): T =
-    if (file eq null) action.call else apply0(file, action)
+    if file eq null then action.call else apply0(file, action)
   private[this] def apply0[T](file: File, action: Callable[T]): T = {
     val lock =
       synchronized {
@@ -51,8 +51,7 @@ object Locks extends xsbti.GlobalLock {
     private[this] var fileLocked = false
     def withLock[T](run: Callable[T]): T =
       synchronized {
-        if (fileLocked)
-          run.call
+        if fileLocked then run.call
         else {
           fileLocked = true
           try {
@@ -91,7 +90,7 @@ object Locks extends xsbti.GlobalLock {
           withChannel(channel)
         } catch {
           case i: InternalLockNPE =>
-            if (retries > 0) withChannelRetries(retries - 1)(channel) else throw i
+            if retries > 0 then withChannelRetries(retries - 1)(channel) else throw i
         }
 
       def withChannel(channel: FileChannel) = {
@@ -99,7 +98,7 @@ object Locks extends xsbti.GlobalLock {
           try {
             channel.tryLock
           } catch { case e: NullPointerException => throw new InternalLockNPE(e) }
-        if (freeLock eq null) {
+        if freeLock eq null then {
           Console.err.println("[info] waiting for lock on " + file + " to be available...");
           val lock =
             try {

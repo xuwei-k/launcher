@@ -3,8 +3,8 @@
  */
 package xsbt.boot
 
-import Pre._
-import ConfigurationParser._
+import Pre.*
+import ConfigurationParser.*
 import java.io.{ BufferedReader, File, FileInputStream, InputStreamReader, Reader, StringReader }
 import java.net.{ MalformedURLException, URL }
 import java.util.regex.{ Matcher, Pattern }
@@ -17,20 +17,19 @@ object ConfigurationParser {
 
   private[this] lazy val VarPattern = Pattern.compile("""\$\{([\w.]+)(\-(.*))?\}""")
   def substituteVariables(s: String): String =
-    if (s.indexOf('$') >= 0) substituteVariables0(s) else s
+    if s.indexOf('$') >= 0 then substituteVariables0(s) else s
   // scala.util.Regex brought in 30kB, so we code it explicitly
   def substituteVariables0(s: String): String = {
     val m = VarPattern.matcher(s)
     val b = new StringBuffer
-    while (m.find()) {
+    while m.find() do {
       val key = m.group(1)
       val defined = System.getProperty(key)
       val value =
-        if (defined ne null)
-          defined
+        if defined ne null then defined
         else {
           val default = m.group(3)
-          if (default eq null) m.group() else substituteVariables(default)
+          if default eq null then m.group() else substituteVariables(default)
         }
       m.appendReplacement(b, quoteReplacement(value))
     }
@@ -110,7 +109,8 @@ class ConfigurationParser {
 
   def readValue[T](label: String)(implicit read: String => T): String => Value[T] = value0 => {
     val value = substituteVariables(value0)
-    if (isEmpty(value)) Pre.error(label + " cannot be empty (omit declaration to use the default)")
+    if isEmpty(value) then
+      Pre.error(label + " cannot be empty (omit declaration to use the default)")
     try {
       parsePropertyValue(label, value)(Value.readImplied[T])
     } catch { case e: BootException => new Explicit(read(value)) }
@@ -120,7 +120,7 @@ class ConfigurationParser {
   def process[K, V, T](sections: ListMap[K, V], name: K, f: V => T): (T, ListMap[K, V]) =
     (f(sections(name)), sections - name)
   def check(map: ListMap[String, ?], label: String): Unit =
-    if (map.isEmpty) () else Pre.error(map.keys.mkString("Invalid " + label + "(s): ", ",", ""))
+    if map.isEmpty then () else Pre.error(map.keys.mkString("Invalid " + label + "(s): ", ",", ""))
   def check[T](label: String, pair: (T, ListMap[String, ?])): T = { check(pair._2, label); pair._1 }
   def id(map: LabelMap, name: String, default: String): (String, LabelMap) =
     (substituteVariables(orElse(getOrNone(map, name), default)), map - name)
@@ -290,10 +290,10 @@ class ConfigurationParser {
       f: (String, String, Option[String]) => T
   ): T = {
     val m = propertyPattern.matcher(definition)
-    if (!m.matches())
+    if !m.matches() then
       Pre.error("invalid property definition '" + definition + "' for property '" + name + "'")
     val optionalArg = m.group(3)
-    f(m.group(1), m.group(2), if (optionalArg eq null) None else Some(optionalArg))
+    f(m.group(1), m.group(2), if optionalArg eq null then None else Some(optionalArg))
   }
 
   type LabelMap = ListMap[String, Option[String]]
@@ -310,7 +310,7 @@ class ConfigurationParser {
         case ((_, None), l: Labeled) => Pre.error("label " + l.label + " is not in a section")
         case ((map, s @ Some(section)), l: Labeled) =>
           val sMap = map(section)
-          if (sMap.contains(l.label))
+          if sMap.contains(l.label) then
             Pre.error("duplicate label '" + l.label + "' in section '" + section + "'")
           else (map(section) = (sMap(l.label) = l.value), s)
       }
@@ -334,7 +334,7 @@ class ParseException(val content: String, val line: Int, val col: Int, val msg: 
 object ParseLine {
   def apply(content: String, line: Int) = {
     def error(col: Int, msg: String) = throw new ParseException(content, line, col, msg)
-    def check(condition: Boolean)(col: Int, msg: String) = if (condition) () else error(col, msg)
+    def check(condition: Boolean)(col: Int, msg: String) = if condition then () else error(col, msg)
 
     val trimmed = trimLeading(content)
 
@@ -362,7 +362,7 @@ object ParseLine {
       }
     }
 
-    if (isEmpty(trimmed)) Nil
+    if isEmpty(trimmed) then Nil
     else {
       val processed =
         trimmed.charAt(0) match {

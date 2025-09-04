@@ -3,7 +3,7 @@
  */
 package xsbt.boot
 
-import Pre._
+import Pre.*
 import java.io.{ File, InputStreamReader }
 import java.net.{ MalformedURLException, URI, URL }
 import java.util.regex.Pattern
@@ -16,7 +16,7 @@ object ConfigurationStorageState extends Enumeration {
 }
 
 object Configuration {
-  import ConfigurationStorageState._
+  import ConfigurationStorageState.*
   final val SysPropPrefix = "-D"
   def parse(file: URL, baseDirectory: File) =
     Using(new InputStreamReader(file.openStream, "utf8"))((new ConfigurationParser).apply)
@@ -41,7 +41,7 @@ object Configuration {
       case _ =>
         val propertyConfigured = System.getProperty("sbt.boot.properties")
         val url =
-          if (propertyConfigured == null) configurationOnClasspath
+          if propertyConfigured == null then configurationOnClasspath
           else configurationFromFile(propertyConfigured, baseDirectory)
         (url, args, PropertiesFile)
     }
@@ -73,12 +73,12 @@ object Configuration {
         try {
           (new File(resolved)).exists
         } catch { case _: IllegalArgumentException => false }
-      if (exists) Some(resolved.toURL) else None
+      if exists then Some(resolved.toURL) else None
     }
     val against = resolveAgainst(baseDirectory)
     // use Iterators so that resolution occurs lazily, for performance
     val resolving = against.iterator.flatMap(e => resolve(e).toList.iterator)
-    if (!resolving.hasNext)
+    if !resolving.hasNext then
       multiPartError("could not find configuration file '" + path + "'. searched:", against)
     resolving.next()
   }
@@ -109,16 +109,15 @@ object Configuration {
   def versionParts(version: String): List[String] = {
     val pattern = Pattern.compile("""(\d+)(\.\d+)(\.\d+)(-.*)?""")
     val m = pattern.matcher(version)
-    if (m.matches())
+    if m.matches() then
       subPartsIndices flatMap { is =>
         fullMatchOnly(is.map(m.group))
       }
-    else
-      noMatchParts
+    else noMatchParts
   }
   def noMatchParts: List[String] = DefaultVersionPart :: fallbackParts
   private[this] def fullMatchOnly(groups: List[String]): Option[String] =
-    if (groups.forall(neNull)) Some(groups.mkString) else None
+    if groups.forall(neNull) then Some(groups.mkString) else None
 
   private[this] def subPartsIndices =
     (1 :: 2 :: 3 :: 4 :: Nil) ::
@@ -143,29 +142,29 @@ object Configuration {
 
   def classLocation(cl: Class[?]): URL = {
     val codeSource = cl.getProtectionDomain.getCodeSource
-    if (codeSource == null) Pre.error("no class location for " + cl)
+    if codeSource == null then Pre.error("no class location for " + cl)
     else codeSource.getLocation
   }
   // single-arg constructor doesn't properly escape
   def filePathURI(path: String): URI = {
-    if (path.startsWith("file:")) new URI(path)
+    if path.startsWith("file:") then new URI(path)
     else {
       val f = new File(path)
-      new URI(if (f.isAbsolute) "file" else null, path, null)
+      new URI(if f.isAbsolute then "file" else null, path, null)
     }
   }
   def directoryURI(dir: File): URI = directoryURI(dir.toURI)
   def directoryURI(uri: URI): URI = {
     assert(uri.isAbsolute)
     val str = uri.toASCIIString
-    val dirStr = if (str.endsWith("/")) str else str + "/"
+    val dirStr = if str.endsWith("/") then str else str + "/"
     (new URI(dirStr)).normalize
   }
 
   def toDirectory(uri: URI): URI =
     try {
       val file = new File(uri)
-      val newFile = if (file.isFile) file.getParentFile else file
+      val newFile = if file.isFile then file.getParentFile else file
       directoryURI(newFile)
     } catch { case _: Exception => uri }
   private[this] def neNull: AnyRef => Boolean = _ ne null

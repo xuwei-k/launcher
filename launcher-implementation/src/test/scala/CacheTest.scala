@@ -1,7 +1,7 @@
 package xsbt.boot
 
-import org.scalacheck._
-import Prop._
+import org.scalacheck.*
+import Prop.*
 
 object CacheTest extends Properties("Cache") {
   implicit val functions: Arbitrary[Int => Int] =
@@ -13,6 +13,6 @@ object CacheTest extends Properties("Cache") {
     val cache = new Cache((i: Int, _: Unit) => map(i))
     def toProperty(key: Int) =
       ("Key " + key) |: ("Value: " + map(key)) |: (cache.apply(key, ()) == map(key))
-    Prop.all(keys.map(toProperty): _*)
+    Prop.all(keys.map(toProperty)*)
   }
 }

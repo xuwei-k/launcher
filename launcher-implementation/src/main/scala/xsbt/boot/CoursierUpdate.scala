@@ -1,7 +1,7 @@
 package xsbt.boot
 
-import Pre._
-import coursier._
+import Pre.*
+import coursier.*
 import coursier.cache.{ CacheDefaults, FileCache }
 import coursier.core.{ Publication, Repository }
 import coursier.credentials.DirectCredentials
@@ -12,7 +12,7 @@ import java.io.{ File, FileWriter, PrintWriter }
 import java.nio.file.{ Files, StandardCopyOption, Paths }
 import java.util.Properties
 import java.util.regex.Pattern
-import BootConfiguration._
+import BootConfiguration.*
 import scala.annotation.nowarn
 
 class CousierUpdate(config: UpdateConfiguration) {
@@ -54,7 +54,7 @@ class CousierUpdate(config: UpdateConfiguration) {
       .orElse(sys.props.get("coursier.cache").map(absoluteFile)) match {
       case Some(dir) => dir
       case _         =>
-        if (isWindows) windowsCacheDirectory
+        if isWindows then windowsCacheDirectory
         else CacheDefaults.location
     }
   }
@@ -67,7 +67,7 @@ class CousierUpdate(config: UpdateConfiguration) {
     cache
   }
   private lazy val coursierRepos: Seq[Repository] =
-    if (repositories.isEmpty) Resolve.defaultRepositories
+    if repositories.isEmpty then Resolve.defaultRepositories
     else Nil
 
   def apply(target: UpdateTarget, reason: String): UpdateResult = {
@@ -87,7 +87,7 @@ class CousierUpdate(config: UpdateConfiguration) {
     val deps = target match {
       case u: UpdateScala =>
         val scalaVersion = getScalaVersion
-        val scalaOrgString = if (scalaOrg != ScalaOrg) scalaOrg + " " else ""
+        val scalaOrgString = if scalaOrg != ScalaOrg then scalaOrg + " " else ""
         Console.err.println(
           s"[info] [launcher] getting ${scalaOrgString}Scala $scalaVersion ${reason}..."
         )
@@ -205,7 +205,7 @@ class CousierUpdate(config: UpdateConfiguration) {
     }
     val r: Resolution = Resolve()
       .withCache(coursierCache)
-      .addDependencies(deps: _*)
+      .addDependencies(deps*)
       .withRepositories(repos)
       .withResolutionParams(params)
       .run()
@@ -227,18 +227,18 @@ class CousierUpdate(config: UpdateConfiguration) {
       case u: UpdateScala => scalaVersion
       case u: UpdateApp   => Some(Value.get(u.id.version))
     }
-    if (!retrieveDir.exists) {
+    if !retrieveDir.exists then {
       Files.createDirectories(retrieveDir.toPath)
     }
     val downloadedJars = Fetch()
       .withCache(coursierCache)
-      .addDependencies(deps: _*)
+      .addDependencies(deps*)
       .withRepositories(repos)
       .withResolutionParams(params)
       .run()
     downloadedJars foreach { downloaded =>
       val t =
-        if (isScala) {
+        if isScala then {
           val name = downloaded.getName match {
             case n if n.startsWith("scala-compiler") => "scala-compiler.jar"
             case n if n.startsWith("scala-library")  => "scala-library.jar"
@@ -252,7 +252,7 @@ class CousierUpdate(config: UpdateConfiguration) {
             // sbt expects test-interface JAR to be called test-interface-1.0.jar with
             // version number, but sometimes it doesn't have it.
             case "test-interface.jar" =>
-              if (Pattern.matches("""[0-9.]+""", downloaded.getParentFile.getName))
+              if Pattern.matches("""[0-9.]+""", downloaded.getParentFile.getName) then
                 "test-interface-" + downloaded.getParentFile.getName + ".jar"
               else "test-interface-0.0.jar"
             case n => n
@@ -265,7 +265,7 @@ class CousierUpdate(config: UpdateConfiguration) {
           case n if n.startsWith("util-interface")     => true
           case _                                       => false
         })
-      if (isSkip) ()
+      if isSkip then ()
       else {
         Files.copy(downloaded.toPath, t.toPath, StandardCopyOption.REPLACE_EXISTING)
         ()
@@ -275,7 +275,7 @@ class CousierUpdate(config: UpdateConfiguration) {
   }
 
   def withPublication(d: Dependency, classifiers: List[String]): List[Dependency] =
-    if (classifiers.isEmpty) List(d)
+    if classifiers.isEmpty then List(d)
     else classifiers.map(c => d.withPublication(Publication.empty.withClassifier(Classifier(c))))
 
   def bootCredentials = {
@@ -289,7 +289,7 @@ class CousierUpdate(config: UpdateConfiguration) {
     )(props: Properties): Option[DirectCredentials] = {
       val List(realm, host, user, password) =
         keys.productIterator.map(key => props.getProperty(key.toString)).toList
-      if (host != null && user != null && password != null)
+      if host != null && user != null && password != null then
         Some(
           DirectCredentials()
             .withHost(host)
@@ -314,7 +314,7 @@ class CousierUpdate(config: UpdateConfiguration) {
 
   @nowarn
   def toCoursierRepository(repo: xsbti.Repository): Seq[Repository] = {
-    import xsbti.Predefined._
+    import xsbti.Predefined.*
     repo match {
       case m: xsbti.MavenRepository =>
         mavenRepository(m.url.toString) :: Nil
@@ -352,7 +352,7 @@ class CousierUpdate(config: UpdateConfiguration) {
   }
 
   private def mavenRepository(root0: String): MavenRepository = {
-    val root = if (root0.endsWith("/")) root0 else root0 + "/"
+    val root = if root0.endsWith("/") then root0 else root0 + "/"
     MavenRepository(root)
   }
 
@@ -378,7 +378,7 @@ class CousierUpdate(config: UpdateConfiguration) {
   private def localRepository: IvyRepository = {
     val localDir = new File(new File(new File(sys.props("user.home")), ".ivy2"), "local")
     val root0 = localDir.toPath.toUri.toASCIIString
-    val root = if (root0.endsWith("/")) root0 else root0 + "/"
+    val root = if root0.endsWith("/") then root0 else root0 + "/"
     IvyRepository
       .parse(
         root + LocalArtifactPattern,
@@ -390,13 +390,11 @@ class CousierUpdate(config: UpdateConfiguration) {
 
   private def pathToUriString(path: String): String = {
     val stopAtIdx = path.indexWhere(c => c == '[' || c == '$' || c == '(')
-    if (stopAtIdx > 0) {
+    if stopAtIdx > 0 then {
       val (pathPart, patternPart) = path.splitAt(stopAtIdx)
       Paths.get(pathPart).toUri.toASCIIString + patternPart
-    } else if (stopAtIdx == 0)
-      "file://" + path
-    else
-      Paths.get(path).toUri.toASCIIString
+    } else if stopAtIdx == 0 then "file://" + path
+    else Paths.get(path).toUri.toASCIIString
   }
 
   /** Logs the given message to a file and to the console. */

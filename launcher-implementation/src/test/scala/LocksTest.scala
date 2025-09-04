@@ -9,7 +9,7 @@ import sbt.io.IO.withTemporaryDirectory
  * These mainly test that things work in the uncontested case and that no OverlappingFileLockExceptions occur.
  * There is no real locking testing, just the coordination of locking.
  */
-object LocksTest extends Properties("Locks") {
+object LocksTest extends Properties("Locks"):
   property("Lock in nonexisting directory") = spec {
     withTemporaryDirectory { dir =>
       val lockFile = new File(dir, "doesntexist/lock")
@@ -47,7 +47,8 @@ object LocksTest extends Properties("Locks") {
     Result(if f then True else False)
   }
 
-  private def call[T](impl: => T) = new java.util.concurrent.Callable[T] { def call = impl }
+  private def call[T](impl: => T) = new java.util.concurrent.Callable[T]:
+    def call = impl
 
   private def callLocked(lockFile: File) = call { Locks(lockFile, callTrue) }
 
@@ -56,7 +57,7 @@ object LocksTest extends Properties("Locks") {
   private def forkFold(n: Int)(impl: Int => Boolean): Boolean =
     forkWait(n)(impl).foldLeft(true) { _ && _ }
 
-  private def forkWait(n: Int)(impl: Int => Boolean): Iterable[Boolean] = {
+  private def forkWait(n: Int)(impl: Int => Boolean): Iterable[Boolean] =
     import scala.concurrent.Future
     import scala.concurrent.ExecutionContext.Implicits.global
     import scala.concurrent.Await
@@ -66,5 +67,3 @@ object LocksTest extends Properties("Locks") {
       Future { impl(i) }
     }
     futures.toList.map(f => Await.result(f, Inf))
-  }
-}

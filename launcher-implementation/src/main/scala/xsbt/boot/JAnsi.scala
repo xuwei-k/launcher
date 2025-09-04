@@ -2,18 +2,18 @@ package xsbt.boot
 
 import Pre.*
 
-object JAnsi {
+object JAnsi:
   def uninstall(loader: ClassLoader): Unit = callJAnsi("systemUninstall", loader)
   def install(loader: ClassLoader): Unit = callJAnsi("systemInstall", loader)
 
   private def callJAnsi(methodName: String, loader: ClassLoader): Unit =
     if isWindows && !isCygwin then callJAnsiMethod(methodName, loader)
   private def callJAnsiMethod(methodName: String, loader: ClassLoader): Unit =
-    try {
+    try
       val c = Class.forName("org.fusesource.jansi.AnsiConsole", true, loader)
       c.getMethod(methodName).invoke(null)
       ()
-    } catch {
+    catch
       case ignore: ClassNotFoundException =>
       /* The below code intentionally traps everything. It technically shouldn't trap the
        * non-StackOverflowError VirtualMachineErrors and AWTError would be weird, but this is PermGen
@@ -24,5 +24,3 @@ object JAnsi {
         Console.err.println(
           "[error] [launcher] Jansi found on class path but initialization failed: " + ex
         )
-    }
-}

@@ -10,12 +10,11 @@ import java.util.regex.Pattern
 import scala.collection.immutable.List
 import annotation.tailrec
 
-object ConfigurationStorageState extends Enumeration {
+object ConfigurationStorageState extends Enumeration:
   val PropertiesFile = value("properties-file")
   val SerializedFile = value("serialized-file")
-}
 
-object Configuration {
+object Configuration:
   import ConfigurationStorageState.*
   final val SysPropPrefix = "-D"
   def parse(file: URL, baseDirectory: File) =
@@ -30,7 +29,7 @@ object Configuration {
       args: List[String],
       baseDirectory: File
   ): (URL, List[String], ConfigurationStorageState.Value) =
-    args match {
+    args match
       case head :: tail if head.startsWith("@load:") =>
         (directConfiguration(head.substring(6), baseDirectory), tail, SerializedFile)
       case head :: tail if head.startsWith("@") =>
@@ -44,44 +43,35 @@ object Configuration {
           if propertyConfigured == null then configurationOnClasspath
           else configurationFromFile(propertyConfigured, baseDirectory)
         (url, args, PropertiesFile)
-    }
-  def setProperty(head: String): Unit = {
-    head.split("=", 2) match {
+  def setProperty(head: String): Unit =
+    head.split("=", 2) match
       case Array("")  => Console.err.println(s"[warn] [launcher] invalid system property '$head'")
       case Array(key) => sys.props += key -> ""
       case Array(key, value) => sys.props += key -> value
       case _                 => ()
-    }
     ()
-  }
-  def configurationOnClasspath: URL = {
+  def configurationOnClasspath: URL =
     val paths = resourcePaths(guessSbtVersion)
     paths.iterator.map(getClass.getResource).find(neNull) getOrElse
       (multiPartError("could not find sbt launch configuration. searched classpath for:", paths))
-  }
-  def directConfiguration(path: String, baseDirectory: File): URL = {
-    try {
-      new URL(path)
-    } catch { case _: MalformedURLException => configurationFromFile(path, baseDirectory) }
-  }
-  def configurationFromFile(path: String, baseDirectory: File): URL = {
+  def directConfiguration(path: String, baseDirectory: File): URL =
+    try new URL(path)
+    catch case _: MalformedURLException => configurationFromFile(path, baseDirectory)
+  def configurationFromFile(path: String, baseDirectory: File): URL =
     val pathURI = filePathURI(path)
-    def resolve(against: URI): Option[URL] = {
+    def resolve(against: URI): Option[URL] =
       val resolved =
         against.resolve(pathURI) // variant that accepts String doesn't properly escape (#725)
       val exists =
-        try {
-          (new File(resolved)).exists
-        } catch { case _: IllegalArgumentException => false }
+        try (new File(resolved)).exists
+        catch case _: IllegalArgumentException => false
       if exists then Some(resolved.toURL) else None
-    }
     val against = resolveAgainst(baseDirectory)
     // use Iterators so that resolution occurs lazily, for performance
     val resolving = against.iterator.flatMap(e => resolve(e).toList.iterator)
     if !resolving.hasNext then
       multiPartError("could not find configuration file '" + path + "'. searched:", against)
     resolving.next()
-  }
   def multiPartError[A](firstLine: String, lines: List[A]) =
     Pre.error((firstLine :: lines.map(_.toString())).mkString("\n\t"))
 
@@ -102,11 +92,10 @@ object Configuration {
     }
   def fallbackParts: List[String] = "" :: Nil
   def versionParts(version: Option[String]): List[String] =
-    version match {
+    version match
       case None    => UnspecifiedVersionPart :: fallbackParts
       case Some(v) => versionParts(v)
-    }
-  def versionParts(version: String): List[String] = {
+  def versionParts(version: String): List[String] =
     val pattern = Pattern.compile("""(\d+)(\.\d+)(\.\d+)(-.*)?""")
     val m = pattern.matcher(version)
     if m.matches() then
@@ -114,7 +103,6 @@ object Configuration {
         fullMatchOnly(is.map(m.group))
       }
     else noMatchParts
-  }
   def noMatchParts: List[String] = DefaultVersionPart :: fallbackParts
   private def fullMatchOnly(groups: List[String]): Option[String] =
     if groups.forall(neNull) then Some(groups.mkString) else None
@@ -129,10 +117,9 @@ object Configuration {
   // the location of project/build.properties and the name of the property within that file
   //  that configures the sbt version is configured in sbt.boot.properties.
   // We have to hard code them here in order to use them to determine the location of sbt.boot.properties itself
-  def guessSbtVersion: Option[String] = {
+  def guessSbtVersion: Option[String] =
     val props = Pre.readProperties(new File(DefaultBuildProperties))
     Option(props.getProperty(SbtVersionProperty))
-  }
 
   def resolveAgainst(baseDirectory: File): List[URI] =
     directoryURI(baseDirectory) ::
@@ -140,32 +127,27 @@ object Configuration {
       toDirectory(classLocation(getClass).toURI) ::
       Nil
 
-  def classLocation(cl: Class[?]): URL = {
+  def classLocation(cl: Class[?]): URL =
     val codeSource = cl.getProtectionDomain.getCodeSource
     if codeSource == null then Pre.error("no class location for " + cl)
     else codeSource.getLocation
-  }
   // single-arg constructor doesn't properly escape
-  def filePathURI(path: String): URI = {
+  def filePathURI(path: String): URI =
     if path.startsWith("file:") then new URI(path)
-    else {
+    else
       val f = new File(path)
       new URI(if f.isAbsolute then "file" else null, path, null)
-    }
-  }
   def directoryURI(dir: File): URI = directoryURI(dir.toURI)
-  def directoryURI(uri: URI): URI = {
+  def directoryURI(uri: URI): URI =
     assert(uri.isAbsolute)
     val str = uri.toASCIIString
     val dirStr = if str.endsWith("/") then str else str + "/"
     (new URI(dirStr)).normalize
-  }
 
   def toDirectory(uri: URI): URI =
-    try {
+    try
       val file = new File(uri)
       val newFile = if file.isFile then file.getParentFile else file
       directoryURI(newFile)
-    } catch { case _: Exception => uri }
+    catch case _: Exception => uri
   private def neNull: AnyRef => Boolean = _ ne null
-}

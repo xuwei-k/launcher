@@ -4,7 +4,7 @@ import java.util.concurrent.Executors
 
 import scala.concurrent.ExecutionContext
 
-private[xsbt] object ParallelExecution {
+private[xsbt] object ParallelExecution:
   protected[xsbt] val executionContext =
     // ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
     ExecutionContext.fromExecutor(
@@ -12,5 +12,3 @@ private[xsbt] object ParallelExecution {
         Runtime.getRuntime.availableProcessors()
       )
     )
-
-}

@@ -10,7 +10,7 @@ import scala.collection.immutable.List
 // preserves iteration order
 sealed class ListMap[K, V] private (backing: List[(K, V)])
     extends Iterable[(K, V)] // use Iterable because Traversable.toStream loops
-    {
+    :
   import ListMap.remove
   def update(k: K, v: V) = this.+((k, v))
   def +(pair: (K, V)) = copy(pair :: remove(backing, pair._1))
@@ -25,14 +25,11 @@ sealed class ListMap[K, V] private (backing: List[(K, V)])
   override def toSeq: Seq[(K, V)] = toList
   protected def copy(newBacking: List[(K, V)]): ListMap[K, V] = new ListMap(newBacking)
   def default(defaultF: K => V): ListMap[K, V] =
-    new ListMap[K, V](backing) {
+    new ListMap[K, V](backing):
       override def apply(k: K) = super.get(k).getOrElse(defaultF(k))
       override def copy(newBacking: List[(K, V)]) = super.copy(newBacking).default(defaultF)
-    }
   override def toString = backing.mkString("ListMap(", ",", ")")
-}
-object ListMap {
+object ListMap:
   def apply[K, V](pairs: (K, V)*) = new ListMap[K, V](pairs.toList.distinct)
   def empty[K, V] = new ListMap[K, V](Nil)
   private def remove[K, V](backing: List[(K, V)], k: K) = backing.filter(_._1 != k)
-}

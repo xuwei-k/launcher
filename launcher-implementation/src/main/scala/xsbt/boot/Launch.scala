@@ -16,36 +16,30 @@ import ConfigurationStorageState.*
 
 class LauncherArguments(val args: List[String], val isLocate: Boolean, val isExportRt: Boolean)
 
-object Launch {
+object Launch:
   def apply(arguments: LauncherArguments): Option[Int] =
     apply((new File("")).getAbsoluteFile, arguments)
 
   def apply(currentDirectory: File, arguments: LauncherArguments): Option[Int] =
-    if arguments.isExportRt then {
-      if arguments.args.size != 1 then {
-        sys.error("destination expected: --export-rt <dest>")
-      }
+    if arguments.isExportRt then
+      if arguments.args.size != 1 then sys.error("destination expected: --export-rt <dest>")
       exportRt(arguments.args.head)
-    } else {
+    else
       val (configLocation, newArgs2, state) = Configuration.find(arguments.args, currentDirectory)
-      val config = state match {
+      val config = state match
         case SerializedFile => LaunchConfiguration.restore(configLocation)
         case PropertiesFile => parseAndInitializeConfig(configLocation, currentDirectory)
-      }
-      if arguments.isLocate then {
-        if !newArgs2.isEmpty then {
+      if arguments.isLocate then
+        if !newArgs2.isEmpty then
           // TODO - Print the arguments without exploding proguard size.
           Console.err.println("[warn] [launcher] --locate option ignores arguments")
-        }
         locate(currentDirectory, config)
-      } else {
+      else
         // First check to see if there are java system properties we need to set. Then launch the application.
         updateProperties(config)
         launch(run(Launcher(config)))(makeRunConfig(currentDirectory, config, newArgs2))
-      }
-    }
 
-  def exportRt(destination: String): Option[Int] = {
+  def exportRt(destination: String): Option[Int] =
     import java.nio.file.*
     import java.util.HashMap
     val fileSystem = FileSystems.getFileSystem(URI.create("jrt:/"))
@@ -55,62 +49,51 @@ object Launch {
     val env = new HashMap[String, String]()
     env.put("create", "true")
     val zipfs = FileSystems.newFileSystem(uri, env)
-    try {
+    try
       val iterator = Files.list(path).iterator()
-      while iterator.hasNext() do {
+      while iterator.hasNext() do
         val next = iterator.next()
         IO.copyDirectory(next, zipfs.getPath("/"))
-      }
-    } finally {
-      zipfs.close
-    }
+    finally zipfs.close
     Some(0)
-  }
 
   /** Locate a server, print where it is, and exit. */
-  def locate(currentDirectory: File, config: LaunchConfiguration): Option[Int] = {
-    config.serverConfig match {
+  def locate(currentDirectory: File, config: LaunchConfiguration): Option[Int] =
+    config.serverConfig match
       case Some(_) =>
         val uri = ServerLocator.locate(currentDirectory, config)
         Console.err.println(uri.toASCIIString)
         Some(0)
       case None =>
         sys.error(s"${config.app.groupID}-${config.app.main} is not configured as a server.")
-    }
-  }
 
   /**
    * Some hackery to allow sys.props to be configured via a file. If this launch config has
    * a valid file configured, we load the properties and and apply them to this jvm.
    */
-  def updateProperties(config: LaunchConfiguration): Unit = {
-    config.serverConfig match {
+  def updateProperties(config: LaunchConfiguration): Unit =
+    config.serverConfig match
       case Some(config) =>
-        config.jvmPropsFile match {
+        config.jvmPropsFile match
           case Some(file) if file.exists =>
             try setSystemProperties(readProperties(file))
-            catch {
+            catch
               case e: Exception =>
                 throw new RuntimeException(s"unable to load server properties file: ${file}", e)
-            }
           case _ =>
-        }
       case None =>
-    }
-  }
 
   /** Parses the configuration *and* runs the initialization code that will remove variable references. */
-  def parseAndInitializeConfig(configLocation: URL, currentDirectory: File): LaunchConfiguration = {
+  def parseAndInitializeConfig(configLocation: URL, currentDirectory: File): LaunchConfiguration =
     val (parsed, bd) = parseConfiguration(configLocation, currentDirectory)
     resolveConfig(parsed)
-  }
 
   /** Parse configuration and return it and the baseDirectory of the launch. */
   def parseConfiguration(configLocation: URL, currentDirectory: File): (LaunchConfiguration, File) =
     Find(Configuration.parse(configLocation, currentDirectory), currentDirectory)
 
   /** Setups the Initialize object so we can fill in system properties in the configuration */
-  def resolveConfig(parsed: LaunchConfiguration): LaunchConfiguration = {
+  def resolveConfig(parsed: LaunchConfiguration): LaunchConfiguration =
     // Set up initialize.
     val propertiesFile = parsed.boot.properties
     import parsed.boot.{ enableQuick, promptCreate, promptFill }
@@ -122,7 +105,6 @@ object Launch {
     val resolved = ResolveValues(parsed)
     resolved.logging.debug("resolved configuration: " + resolved)
     resolved
-  }
 
   /** Create run configuration we'll use to launch the app. */
   def makeRunConfig(
@@ -133,7 +115,7 @@ object Launch {
     new RunConfiguration(config.getScalaVersion, config.app.toID, currentDirectory, arguments)
 
   /** The actual mechanism used to run a launched application. */
-  def run(launcher: xsbti.Launcher)(config: RunConfiguration): xsbti.MainResult = {
+  def run(launcher: xsbti.Launcher)(config: RunConfiguration): xsbti.MainResult =
     import config.*
     val appProvider: xsbti.AppProvider =
       launcher.app(app, orNull(scalaVersion)) // takes ~40 ms when no update is required
@@ -142,22 +124,19 @@ object Launch {
 
     // TODO - Jansi probably should be configurable via some other mechanism...
     JAnsi.install(launcher.topLoader)
-    try {
+    try
       val main = appProvider.newMain()
-      try {
-        withContextLoader(appProvider.loader)(main.run(appConfig))
-      } catch {
-        case e: xsbti.FullReload => if e.clean then delete(launcher.bootDirectory); throw e
-      }
-    } finally {
-      JAnsi.uninstall(launcher.topLoader)
-    }
-  }
+      try withContextLoader(appProvider.loader)(main.run(appConfig))
+      catch
+        case e: xsbti.FullReload =>
+          if e.clean then delete(launcher.bootDirectory) else ()
+          throw e
+    finally JAnsi.uninstall(launcher.topLoader)
   @tailrec
   final def launch(
       run: RunConfiguration => xsbti.MainResult
-  )(config: RunConfiguration): Option[Int] = {
-    run(config) match {
+  )(config: RunConfiguration): Option[Int] =
+    run(config) match
       case e: xsbti.Exit     => Some(e.code)
       case c: xsbti.Continue => None
       case r: xsbti.Reboot   =>
@@ -168,22 +147,17 @@ object Launch {
         throw new BootException(
           "invalid main result: " + x + (if x eq null then "" else " (class: " + x.getClass + ")")
         )
-    }
-  }
-  private def withContextLoader[T](loader: ClassLoader)(eval: => T): T = {
+  private def withContextLoader[T](loader: ClassLoader)(eval: => T): T =
     val oldLoader = Thread.currentThread.getContextClassLoader
     Thread.currentThread.setContextClassLoader(loader)
-    try {
+    try
       eval
-    } finally {
+    finally
       Thread.currentThread.setContextClassLoader(oldLoader)
-    }
-  }
 
   // Cache of classes for lookup later.
   val ServerMainClass = classOf[xsbti.ServerMain]
   val AppMainClass = classOf[xsbti.AppMain]
-}
 final class RunConfiguration(
     val scalaVersion: Option[String],
     val app: xsbti.ApplicationID,
@@ -204,7 +178,7 @@ class Launch private[xsbt] (
     val bootDirectory: File,
     val lockBoot: Boolean,
     val ivyOptions: IvyOptions
-) extends xsbti.Launcher {
+) extends xsbti.Launcher:
   import ivyOptions.{ checksums as checksumsList, classifiers, repositories }
   bootDirectory.mkdirs
   def getScala(version: String): xsbti.ScalaProvider = getScala(version, "")
@@ -219,11 +193,11 @@ class Launch private[xsbt] (
   val bootLoader = new BootFilteredLoader(getClass.getClassLoader)
 
   @nowarn
-  private val initLoader: ClassLoader = if isWindows && !isCygwin then {
+  private val initLoader: ClassLoader = if isWindows && !isCygwin then
     val version =
       sys.props.get(Configuration.SbtVersionProperty) orElse Configuration.guessSbtVersion
     if version.fold(false)(_.startsWith("0.")) then jansiLoader(bootLoader) else bootLoader
-  } else bootLoader
+  else bootLoader
 
   private val scalaProviderClassLoader = new AtomicReference(initLoader)
   def topLoader: ClassLoader = scalaProviderClassLoader.get()
@@ -242,7 +216,7 @@ class Launch private[xsbt] (
 
   // JAnsi needs to be shared between Scala and the application so there aren't two competing versions
   @deprecated("sbt handles jansi management itself", "1.1.6")
-  def jansiLoader(parent: ClassLoader): ClassLoader = {
+  def jansiLoader(parent: ClassLoader): ClassLoader =
     val id = AppID(
       "org.fusesource.jansi",
       "jansi",
@@ -254,11 +228,10 @@ class Launch private[xsbt] (
     )
     val jansiHome = appDirectory(new File(bootDirectory, baseDirectoryName(ScalaOrg, None)), id)
     val module = appModule(id, None, false, "jansi")
-    def makeLoader(): ClassLoader = {
+    def makeLoader(): ClassLoader =
       val urls = toURLs(wrapNull(jansiHome.listFiles(JarFilter)))
       val loader = new URLClassLoader(urls, bootLoader)
       checkLoader(loader, module, "org.fusesource.jansi.internal.WindowsSupport" :: Nil, loader)
-    }
     val existingLoader =
       if jansiHome.exists then
         try Some(makeLoader())
@@ -268,17 +241,15 @@ class Launch private[xsbt] (
       update(module, "")
       makeLoader()
     }
-  }
   def checkLoader[T](
       loader: ClassLoader,
       module: ModuleDefinition,
       testClasses: Seq[String],
       ifValid: T
-  ): T = {
+  ): T =
     val missing = getMissing(loader, testClasses)
     if missing.isEmpty then ifValid
     else module.retrieveCorrupt(missing)
-  }
 
   private def makeConfiguration(
       scalaOrg: String,
@@ -298,16 +269,17 @@ class Launch private[xsbt] (
       explicitScalaVersion: Option[String],
       forceAppUpdate: Boolean
   ): xsbti.AppProvider =
-    locked(new Callable[xsbti.AppProvider] {
-      def call = getAppProvider0(id, explicitScalaVersion, forceAppUpdate)
-    })
+    locked(
+      new Callable[xsbti.AppProvider]:
+        def call = getAppProvider0(id, explicitScalaVersion, forceAppUpdate)
+    )
 
   @tailrec private final def getAppProvider0(
       id: xsbti.ApplicationID,
       explicitScalaVersion0: Option[String],
       forceAppUpdate: Boolean
-  ): xsbti.AppProvider = {
-    val explicitScalaVersion = explicitScalaVersion0 match {
+  ): xsbti.AppProvider =
+    val explicitScalaVersion = explicitScalaVersion0 match
       case Some(sv) => Some(sv)
       case _        =>
         // https://github.com/sbt/sbt/issues/6587
@@ -318,7 +290,6 @@ class Launch private[xsbt] (
           id.name() == "sbt" && id.version().startsWith("1.4.")
         then Some("2.12.12")
         else None
-    }
     val app = appModule(id, explicitScalaVersion, true, "app")
 
     /** Replace the version of an ApplicationID with the given one, if set. */
@@ -337,11 +308,10 @@ class Launch private[xsbt] (
       } getOrElse id
     val baseDirs = (resolvedVersion: Option[String]) =>
       (base: File) => appBaseDirs(base, resolveId(resolvedVersion, id))
-    def retrieve() = {
+    def retrieve() =
       val (appv, sv) = update(app, "")
       val scalaVersion = strictOr(explicitScalaVersion, sv)
       new RetrievedModule(true, app, sv, appv, baseDirs(appv)(scalaHome(ScalaOrg, scalaVersion)))
-    }
     val retrievedApp =
       if forceAppUpdate then retrieve()
       else existing(app, ScalaOrg, explicitScalaVersion, baseDirs(None)) getOrElse retrieve()
@@ -369,7 +339,6 @@ class Launch private[xsbt] (
     if missing.isEmpty then appProvider
     else if retrievedApp.fresh then app.retrieveCorrupt(missing)
     else getAppProvider0(resolvedId, explicitScalaVersion, true)
-  }
 
   def scalaHome(scalaOrg: String, scalaVersion: Option[String]): File =
     new File(bootDirectory, baseDirectoryName(scalaOrg, scalaVersion))
@@ -381,11 +350,10 @@ class Launch private[xsbt] (
       id: xsbti.ApplicationID,
       module: RetrievedModule,
       scalaProvider: xsbti.ScalaProvider
-  ): (Iterable[String], xsbti.AppProvider) = {
+  ): (Iterable[String], xsbti.AppProvider) =
     val p = appProvider(id, module, scalaProvider, appHome(id, Some(scalaProvider.version)))
     val missing = getMissing(p.loader, id.mainClass :: Nil)
     (missing, p)
-  }
   private def locked[T](c: Callable[T]): T = Locks(orNull(updateLockFile), c)
   def getScalaProvider(
       scalaOrg: String,
@@ -393,45 +361,43 @@ class Launch private[xsbt] (
       reason: String,
       classLoader: ClassLoader
   ): xsbti.ScalaProvider =
-    locked(new Callable[xsbti.ScalaProvider] {
-      def call = getScalaProvider0(scalaOrg, scalaVersion, reason, classLoader)
-    })
+    locked(
+      new Callable[xsbti.ScalaProvider]:
+        def call = getScalaProvider0(scalaOrg, scalaVersion, reason, classLoader)
+    )
 
   private final def getScalaProvider0(
       scalaOrg: String,
       scalaVersion: String,
       reason: String,
       classLoader: ClassLoader
-  ) = {
+  ) =
     val scalaM = scalaModule(scalaOrg, scalaVersion)
     val (scalaHome, lib) = scalaDirs(scalaM, scalaOrg, scalaVersion)
     val baseDirs = lib :: Nil
     def testLoadScalaClasses =
       if scalaVersion.startsWith("2.") then TestLoadScala2Classes
       else TestLoadScala3Classes
-    def provider(retrieved: RetrievedModule): xsbti.ScalaProvider = {
+    def provider(retrieved: RetrievedModule): xsbti.ScalaProvider =
       val p = scalaProvider(scalaVersion, retrieved, classLoader, lib)
       checkLoader(p.loader, retrieved.definition, testLoadScalaClasses, p)
-    }
     existing(scalaM, scalaOrg, Some(scalaVersion), _ => baseDirs) flatMap { mod =>
       try Some(provider(mod))
-      catch { case e: Exception => None }
+      catch case e: Exception => None
     } getOrElse {
       val (_, scalaVersion) = update(scalaM, reason)
       provider(new RetrievedModule(true, scalaM, scalaVersion, baseDirs))
     }
-  }
 
   def existing(
       module: ModuleDefinition,
       scalaOrg: String,
       explicitScalaVersion: Option[String],
       baseDirs: File => List[File]
-  ): Option[RetrievedModule] = {
-    val filter = new java.io.FileFilter {
+  ): Option[RetrievedModule] =
+    val filter = new java.io.FileFilter:
       val explicitName = explicitScalaVersion.map(sv => baseDirectoryName(scalaOrg, Some(sv)))
       def accept(file: File) = file.isDirectory && explicitName.forall(_ == file.getName)
-    }
     val retrieved = wrapNull(bootDirectory.listFiles(filter)) flatMap { scalaDir =>
       val appDir = directory(scalaDir, module.target)
       if appDir.exists then
@@ -439,24 +405,20 @@ class Launch private[xsbt] (
       else Nil
     }
     retrieved.headOption
-  }
-  def directory(scalaDir: File, target: UpdateTarget): File = target match {
+  def directory(scalaDir: File, target: UpdateTarget): File = target match
     case _: UpdateScala => scalaDir
     case ua: UpdateApp  => appDirectory(scalaDir, ua.id.toID)
-  }
-  def appBaseDirs(scalaHome: File, id: xsbti.ApplicationID): List[File] = {
+  def appBaseDirs(scalaHome: File, id: xsbti.ApplicationID): List[File] =
     val appHome = appDirectory(scalaHome, id)
     val components = componentProvider(appHome)
     appHome :: id.mainComponents.map(components.componentLocation).toList
-  }
   def appDirectory(base: File, id: xsbti.ApplicationID): File =
     new File(base, appDirectoryName(id, File.separator))
 
-  def scalaDirs(module: ModuleDefinition, scalaOrg: String, scalaVersion: String): (File, File) = {
+  def scalaDirs(module: ModuleDefinition, scalaOrg: String, scalaVersion: String): (File, File) =
     val scalaHome = new File(bootDirectory, baseDirectoryName(scalaOrg, Some(scalaVersion)))
     val libDirectory = new File(scalaHome, ScalaDirectoryName)
     (scalaHome, libDirectory)
-  }
 
   def appProvider(
       appID: xsbti.ApplicationID,
@@ -464,7 +426,7 @@ class Launch private[xsbt] (
       scalaProvider0: xsbti.ScalaProvider,
       appHome: File
   ): xsbti.AppProvider =
-    new xsbti.AppProvider {
+    new xsbti.AppProvider:
       import Launch.AppMainClass
       val scalaProvider = scalaProvider0
       val id = appID
@@ -472,7 +434,7 @@ class Launch private[xsbt] (
       lazy val loader = app.createLoader(scalaProvider.loader)
       // TODO - For some reason we can't call this from vanilla scala.  We get a
       // no such method exception UNLESS we're in the same project.
-      lazy val entryPoint: Class[?] = {
+      lazy val entryPoint: Class[?] =
         val c = Class.forName(id.mainClass, true, loader)
         if ServerApplication.isServerApplication(c) then c
         else if classOf[xsbti.AppMain].isAssignableFrom(c) then c
@@ -482,11 +444,10 @@ class Launch private[xsbt] (
             s"${c} is not an instance of xsbti.AppMain, xsbti.ServerMain nor does it have one of these static methods:\n" +
               " * void main(String[] args)\n * int main(String[] args)\n * xsbti.Exit main(String[] args)\n"
           )
-      }
       // Deprecated API.  Remove when we can.
       def mainClass: Class[? <: xsbti.AppMain] =
         entryPoint.asSubclass(AppMainClass)
-      def newMain(): xsbti.AppMain = {
+      def newMain(): xsbti.AppMain =
         if ServerApplication.isServerApplication(entryPoint) then ServerApplication(this)
         else if AppMainClass.isAssignableFrom(entryPoint) then
           mainClass.getDeclaredConstructor().newInstance()
@@ -495,9 +456,7 @@ class Launch private[xsbt] (
           throw new IncompatibleClassChangeError(
             s"main class ${entryPoint.getName} is not an instance of xsbti.AppMain, xsbti.ServerMain nor does it have a valid `main` method."
           )
-      }
       lazy val components = componentProvider(appHome)
-    }
   def componentProvider(appHome: File) = new ComponentProvider(appHome, lockBoot)
 
   def scalaProvider(
@@ -505,15 +464,14 @@ class Launch private[xsbt] (
       module: RetrievedModule,
       parentLoader: ClassLoader,
       scalaLibDir: File
-  ): xsbti.ScalaProvider = new xsbti.ExtendedScalaProvider {
+  ): xsbti.ScalaProvider = new xsbti.ExtendedScalaProvider:
     def launcher: Launch = Launch.this
     def version = scalaVersion
 
-    private object LoaderInit {
+    private object LoaderInit:
       val (library, other) = module.fullClasspath.partition(_.getName.startsWith("scala-library"))
       val libraryLoader = new LibraryClassLoader(toURLs(library), parentLoader, scalaVersion)
       val fullLoader = new URLClassLoader(toURLs(other), libraryLoader)
-    }
 
     override def loaderLibraryOnly(): ClassLoader = LoaderInit.libraryLoader
     override def loader(): ClassLoader = LoaderInit.fullLoader
@@ -522,7 +480,6 @@ class Launch private[xsbt] (
     def jars = module.fullClasspath
 
     def app(id: xsbti.ApplicationID) = Launch.this.app(id, Some(scalaVersion))
-  }
 
   def appModule(
       id: xsbti.ApplicationID,
@@ -567,21 +524,18 @@ object Launcher:
   def apply(bootDirectory: File, ivyOptions: IvyOptions): xsbti.Launcher =
     apply(bootDirectory, ivyOptions, GetLocks.find)
   def apply(bootDirectory: File, ivyOptions: IvyOptions, locks: xsbti.GlobalLock): xsbti.Launcher =
-    new Launch(bootDirectory, true, ivyOptions) {
+    new Launch(bootDirectory, true, ivyOptions):
       override def globalLock = locks
-    }
   def apply(explicit: LaunchConfiguration): xsbti.Launcher =
     new Launch(explicit.boot.directory, explicit.boot.lock, explicit.ivyConfiguration)
   def defaultAppProvider(baseDirectory: File): xsbti.AppProvider =
     getAppProvider(baseDirectory, Configuration.configurationOnClasspath)
-  def getAppProvider(baseDirectory: File, configLocation: URL): xsbti.AppProvider = {
+  def getAppProvider(baseDirectory: File, configLocation: URL): xsbti.AppProvider =
     val parsed = ResolvePaths(Configuration.parse(configLocation, baseDirectory), baseDirectory)
     Initialize.process(parsed.boot.properties, parsed.appProperties, Initialize.selectQuick)
     val config = ResolveValues(parsed)
     val launcher = apply(config)
     launcher.app(config.app.toID, orNull(config.getScalaVersion))
-  }
-}
 
 // Do not change this without testing sbt 1.3.13
 // https://github.com/sbt/sbt/blob/v1.3.13/main/src/main/scala/sbt/internal/XMainConfiguration.scala#L32-L33
@@ -589,10 +543,10 @@ object Launcher:
 private[boot] class TestInterfaceLoader(jar: File, parent: ClassLoader, topLoader: ClassLoader)
     extends URLClassLoader(Array(jar.toURI.toURL), topLoader)
 
-class ComponentProvider(baseDirectory: File, lockBoot: Boolean) extends xsbti.ComponentProvider {
+class ComponentProvider(baseDirectory: File, lockBoot: Boolean) extends xsbti.ComponentProvider:
   def componentLocation(id: String): File = new File(baseDirectory, id)
   def component(id: String) = wrapNull(componentLocation(id).listFiles).filter(_.isFile)
-  def defineComponent(id: String, files: Array[File]) = {
+  def defineComponent(id: String, files: Array[File]) =
     val location = componentLocation(id)
     if location.exists then
       throw new BootException(
@@ -600,16 +554,12 @@ class ComponentProvider(baseDirectory: File, lockBoot: Boolean) extends xsbti.Co
       )
     else Copy(files.toList, location)
     ()
-  }
   def addToComponent(id: String, files: Array[File]): Boolean =
     Copy(files.toList, componentLocation(id))
   def lockFile =
     if lockBoot then ComponentProvider.lockFile(baseDirectory)
     else null // null for the Java interface
-}
-object ComponentProvider {
-  def lockFile(baseDirectory: File) = {
+object ComponentProvider:
+  def lockFile(baseDirectory: File) =
     baseDirectory.mkdirs()
     new File(baseDirectory, "sbt.components.lock")
-  }
-}

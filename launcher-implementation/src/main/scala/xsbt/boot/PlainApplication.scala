@@ -2,14 +2,14 @@ package xsbt
 package boot
 
 /** A wrapper around 'raw' static methods to meet the sbt application interface. */
-class PlainApplication private (mainMethod: java.lang.reflect.Method) extends xsbti.AppMain {
-  override def run(configuration: xsbti.AppConfiguration): xsbti.MainResult = {
+class PlainApplication private (mainMethod: java.lang.reflect.Method) extends xsbti.AppMain:
+  override def run(configuration: xsbti.AppConfiguration): xsbti.MainResult =
     // TODO - Figure out if the main method returns an Int...
     val IntClass = classOf[Int]
     val ExitClass = classOf[xsbti.Exit]
     // It seems we may need to wrap exceptions here...
     try
-      mainMethod.getReturnType match {
+      mainMethod.getReturnType match
         case ExitClass =>
           mainMethod.invoke(null, configuration.arguments).asInstanceOf[xsbti.Exit]
         case IntClass =>
@@ -18,34 +18,25 @@ class PlainApplication private (mainMethod: java.lang.reflect.Method) extends xs
           // Here we still invoke, but return 0 if sucessful (no exceptions).
           mainMethod.invoke(null, configuration.arguments)
           PlainApplication.Exit(0)
-      }
-    catch {
+    catch
       // This is only thrown if the underlying reflective call throws.
       // Let's expose the underlying error.
       case e: java.lang.reflect.InvocationTargetException if e.getCause != null =>
         throw e.getCause
-    }
-
-  }
-}
 
 /** An object that lets us detect compatible "plain" applications and launch them reflectively. */
-object PlainApplication {
+object PlainApplication:
   def isPlainApplication(clazz: Class[?]): Boolean = findMainMethod(clazz).isDefined
   def apply(clazz: Class[?]): xsbti.AppMain =
-    findMainMethod(clazz) match {
+    findMainMethod(clazz) match
       case Some(method) => new PlainApplication(method)
       case None         => sys.error("class: " + clazz + " does not have a main method!")
-    }
   private def findMainMethod(clazz: Class[?]): Option[java.lang.reflect.Method] =
-    try {
+    try
       val method =
         clazz.getMethod("main", classOf[Array[String]])
       if java.lang.reflect.Modifier.isStatic(method.getModifiers) then Some(method)
       else None
-    } catch {
-      case n: NoSuchMethodException => None
-    }
+    catch case n: NoSuchMethodException => None
 
   case class Exit(code: Int) extends xsbti.Exit
-}

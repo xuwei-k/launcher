@@ -51,8 +51,10 @@ import url.CredentialsStore
 
 import BootConfiguration.*
 
-sealed trait UpdateTarget { def tpe: String; def classifiers: List[String] }
-final class UpdateScala(val classifiers: List[String]) extends UpdateTarget { def tpe = "scala" }
+sealed trait UpdateTarget:
+  def tpe: String; def classifiers: List[String]
+final class UpdateScala(val classifiers: List[String]) extends UpdateTarget:
+  def tpe = "scala"
 final class UpdateApp(val id: Application, val classifiers: List[String], val tpe: String)
     extends UpdateTarget
 
@@ -63,22 +65,22 @@ final class UpdateConfiguration(
     val scalaVersion: Option[String],
     val repositories: List[xsbti.Repository],
     val checksums: List[String]
-) {
+):
   val resolutionCacheBase = new File(bootDirectory, "resolution-cache")
-  def getScalaVersion = scalaVersion match { case Some(sv) => sv; case None => "" }
-}
+  def getScalaVersion = scalaVersion match
+    case Some(sv) => sv;
+    case None     => ""
 
 final class UpdateResult(
     val success: Boolean,
     val scalaVersion: Option[String],
     val appVersion: Option[String]
-) {
+):
   @deprecated("use the other constructor providing appVersion.", "0.13.2")
   def this(success: Boolean, scalaVersion: Option[String]) = this(success, scalaVersion, None)
-}
 
 /** Ensures that the Scala and application jars exist for the given versions or else downloads them. */
-final class Update(config: UpdateConfiguration) {
+final class Update(config: UpdateConfiguration):
   import config.{
     bootDirectory,
     checksums,
@@ -94,97 +96,89 @@ final class Update(config: UpdateConfiguration) {
   private def logFile = new File(bootDirectory, UpdateLogName)
   private val logWriter = new PrintWriter(new FileWriter(logFile))
 
-  private def addCredentials(): Unit = {
+  private def addCredentials(): Unit =
     val optionProps =
       Option(System.getProperty("sbt.boot.credentials")) orElse
         Option(System.getenv("SBT_CREDENTIALS")) map (path =>
           Pre.readProperties(new File(substituteTilde(path)))
         )
-    optionProps match {
+    optionProps match
       case Some(props) => extractCredentials(("realm", "host", "user", "password"))(props)
       case None        => ()
-    }
     extractCredentials(("sbt.boot.realm", "sbt.boot.host", "sbt.boot.user", "sbt.boot.password"))(
       System.getProperties
     )
-  }
   private def extractCredentials(
       keys: (String, String, String, String)
-  )(props: Properties): Unit = {
+  )(props: Properties): Unit =
     val List(realm, host, user, password) =
       keys.productIterator.map(key => props.getProperty(key.toString)).toList
     if realm != null && host != null && user != null && password != null then
       CredentialsStore.INSTANCE.addCredentials(realm, host, user, password)
-  }
-  private lazy val settings = {
+  private lazy val settings =
     addCredentials()
     val settings = new IvySettings
-    ivyHome match { case Some(dir) => settings.setDefaultIvyUserDir(dir); case None => }
+    ivyHome match
+      case Some(dir) => settings.setDefaultIvyUserDir(dir);
+      case None      =>
     addResolvers(settings)
     settings.setVariable("ivy.checksums", checksums mkString ",")
     settings.setDefaultConflictManager(settings.getConflictManager(ConflictManagerName))
     settings.setBaseDir(bootDirectory)
     setScalaVariable(settings, scalaVersion)
     settings
-  }
   private def setScalaVariable(settings: IvySettings, scalaVersion: Option[String]): Unit =
-    scalaVersion match { case Some(sv) => settings.setVariable("scala", sv); case None => }
-  private lazy val ivy = {
-    val ivy = new Ivy() {
+    scalaVersion match
+      case Some(sv) => settings.setVariable("scala", sv);
+      case None     =>
+  private lazy val ivy =
+    val ivy = new Ivy():
       private val loggerEngine = new SbtMessageLoggerEngine;
       override def getLoggerEngine: MessageLoggerEngine = loggerEngine
-    }
     ivy.setSettings(settings)
     ivy.bind()
     ivy
-  }
   // should be the same file as is used in the Ivy module
   private lazy val ivyLockFile = new File(settings.getDefaultIvyUserDir, ".sbt.ivy.lock")
   lazy val coursierUpdate = new CousierUpdate(config)
 
   /** The main entry point of this class for use by the Update module.  It runs Ivy */
-  def apply(target: UpdateTarget, reason: String): UpdateResult = {
+  def apply(target: UpdateTarget, reason: String): UpdateResult =
     val x = Option(System.getProperty("sbt.launcher.coursier"))
-    val useCousier = x match {
+    val useCousier = x match
       case Some("true") | Some("1") => true
       case Some(_)                  => false
       case None                     =>
-        target match {
+        target match
           // https://github.com/sbt/sbt/issues/6447
           case u: UpdateApp
               if u.id.groupID == "org.scala-sbt" &&
                 u.id.getName == "sbt" && u.id.getVersion.startsWith("0.") =>
             false
           case _ => true
-        }
-    }
     if useCousier then coursierUpdate(target, reason)
-    else {
+    else
       Message.setDefaultLogger(new SbtIvyLogger(logWriter))
-      val action = new Callable[UpdateResult] { def call = lockedApply(target, reason) }
+      val action = new Callable[UpdateResult]:
+        def call = lockedApply(target, reason)
       Locks(ivyLockFile, action)
-    }
-  }
 
-  private def lockedApply(target: UpdateTarget, reason: String): UpdateResult = {
+  private def lockedApply(target: UpdateTarget, reason: String): UpdateResult =
     ivy.pushContext()
-    try {
-      update(target, reason)
-    } catch {
+    try update(target, reason)
+    catch
       case e: Exception =>
         e.printStackTrace(logWriter)
         log("[error] [launcher] " + e.toString)
         Console.err.println("  (see " + logFile + " for complete log)")
         new UpdateResult(false, None, None)
-    } finally {
+    finally
       logWriter.close()
       ivy.popContext()
       delete(resolutionCacheBase)
-    }
-  }
 
   /** Runs update for the specified target (updates either the scala or appliciation jars for building the project) */
-  private def update(target: UpdateTarget, reason: String): UpdateResult = {
+  private def update(target: UpdateTarget, reason: String): UpdateResult =
     import IvyConfiguration.Visibility.PUBLIC
     // the actual module id here is not that important
     val moduleID = new DefaultModuleDescriptor(
@@ -198,10 +192,10 @@ final class Update(config: UpdateConfiguration) {
       new IvyConfiguration(DefaultIvyConfiguration, PUBLIC, "", new Array(0), true, null)
     )
     // add dependencies based on which target needs updating
-    val dep = target match {
+    val dep = target match
       case u: UpdateScala =>
         val scalaVersion = getScalaVersion
-        val ddesc = scalaVersion match {
+        val ddesc = scalaVersion match
           case sv if sv.startsWith("2.") =>
             addDependency(
               moduleID,
@@ -238,7 +232,6 @@ final class Update(config: UpdateConfiguration) {
             )
           case _ =>
             error("unsupported Scala version " + scalaVersion)
-        }
         excludeJUnit(moduleID)
         val scalaOrgString = if scalaOrg != ScalaOrg then scalaOrg + " " else ""
         Console.err.println(
@@ -247,12 +240,11 @@ final class Update(config: UpdateConfiguration) {
         ddesc.getDependencyId
       case u: UpdateApp =>
         val app = u.id
-        val resolvedName = (app.crossVersioned, scalaVersion) match {
+        val resolvedName = (app.crossVersioned, scalaVersion) match
           case (xsbti.CrossValue.Full, Some(sv))   => app.getName + "_" + sv
           case (xsbti.CrossValue.Binary, Some(sv)) =>
             app.getName + "_" + CrossVersionUtil.binaryScalaVersion(sv)
           case _ => app.getName
-        }
         val ddesc = addDependency(
           moduleID,
           app.groupID,
@@ -265,29 +257,25 @@ final class Update(config: UpdateConfiguration) {
           s"[info] [launcher] getting ${app.groupID} $resolvedName ${app.getVersion} $reason (this may take some time)..."
         )
         ddesc.getDependencyId
-    }
     update(moduleID, target, dep)
-  }
 
   /** Runs the resolve and retrieve for the given moduleID, which has had its dependencies added already. */
   private def update(
       moduleID: DefaultModuleDescriptor,
       target: UpdateTarget,
       dep: ModuleId
-  ): UpdateResult = {
+  ): UpdateResult =
     val eventManager = new EventManager
     val (autoScalaVersion, depVersion) = resolve(eventManager, moduleID, dep)
     // Fix up target.id with the depVersion that we know for sure is resolved (not dynamic) -- this way, `retrieve`
     // will put them in the right version directory.
-    val target1 = (depVersion, target) match {
+    val target1 = (depVersion, target) match
       case (Some(dv), u: UpdateApp) =>
         import u.*; new UpdateApp(id.copy(version = new Explicit(dv)), classifiers, tpe)
       case _ => target
-    }
     setScalaVariable(settings, autoScalaVersion)
     retrieve(eventManager, moduleID, target1, autoScalaVersion)
     new UpdateResult(true, autoScalaVersion, depVersion)
-  }
   private def createID(organization: String, name: String, revision: String) =
     ModuleRevisionId.newInstance(organization, name, revision)
 
@@ -299,7 +287,7 @@ final class Update(config: UpdateConfiguration) {
       revision: String,
       conf: String,
       classifiers: List[String]
-  ) = {
+  ) =
     val dep = new DefaultDependencyDescriptor(
       moduleID,
       createID(organization, name, revision),
@@ -311,12 +299,11 @@ final class Update(config: UpdateConfiguration) {
     for classifier <- classifiers do addClassifier(dep, name, classifier)
     moduleID.addDependency(dep)
     dep
-  }
   private def addClassifier(
       dep: DefaultDependencyDescriptor,
       name: String,
       classifier: String
-  ): Unit = {
+  ): Unit =
     val extraMap = new java.util.HashMap[String, String]
     if !isEmpty(classifier) then extraMap.put("e:classifier", classifier)
     val ivyArtifact = new DefaultDependencyArtifactDescriptor(
@@ -328,10 +315,9 @@ final class Update(config: UpdateConfiguration) {
       extraMap
     )
     for conf <- dep.getModuleConfigurations do dep.addDependencyArtifact(conf, ivyArtifact)
-  }
   private def excludeJUnit(module: DefaultModuleDescriptor): Unit =
     module.addExcludeRule(excludeRule(JUnitName, JUnitName))
-  private def excludeRule(organization: String, name: String): ExcludeRule = {
+  private def excludeRule(organization: String, name: String): ExcludeRule =
     val artifact = new ArtifactId(ModuleId.newInstance(organization, name), "*", "*", "*")
     val rule = new DefaultExcludeRule(
       artifact,
@@ -340,7 +326,6 @@ final class Update(config: UpdateConfiguration) {
     )
     rule.addConfiguration(DefaultIvyConfiguration)
     rule
-  }
   val scalaLibraryId = ModuleId.newInstance(ScalaOrg, LibraryModuleName)
   val scala3Library3Id = ModuleId.newInstance(ScalaOrg, Library3ModuleName)
   // Returns the version of the scala library, as well as `dep` (a dependency of `module`) after it's been resolved
@@ -348,14 +333,14 @@ final class Update(config: UpdateConfiguration) {
       eventManager: EventManager,
       module: ModuleDescriptor,
       dep: ModuleId
-  ): (Option[String], Option[String]) = {
+  ): (Option[String], Option[String]) =
     val resolveOptions = new ResolveOptions
     // this reduces the substantial logging done by Ivy, including the progress dots when downloading artifacts
     resolveOptions.setLog(LogOptions.LOG_DOWNLOAD_ONLY)
     resolveOptions.setCheckIfChanged(false)
     val resolveEngine = new ParallelResolveEngine(settings, eventManager, new SortEngine(settings))
     val resolveReport = resolveEngine.resolve(module, resolveOptions)
-    if resolveReport.hasError then {
+    if resolveReport.hasError then
       logExceptions(resolveReport)
       val seen = new java.util.LinkedHashSet[Any]
       seen.addAll(resolveReport.getAllProblemMessages)
@@ -365,35 +350,30 @@ final class Update(config: UpdateConfiguration) {
           .mkString(System.getProperty("line.separator"))
       )
       error("error retrieving required libraries")
-    }
     val modules = moduleRevisionIDs(resolveReport)
     val autoScala =
       extractVersion(modules, scala3Library3Id).orElse(extractVersion(modules, scalaLibraryId))
     autoScala -> extractVersion(modules, dep)
-  }
 
   private def extractVersion(
       modules: Seq[ModuleRevisionId],
       dep: ModuleId
-  ): Option[String] = {
+  ): Option[String] =
     modules collectFirst { case m if m.getModuleId.equals(dep) => m.getRevision }
-  }
-  private def moduleRevisionIDs(report: ResolveReport): Seq[ModuleRevisionId] = {
+  private def moduleRevisionIDs(report: ResolveReport): Seq[ModuleRevisionId] =
     import scala.jdk.CollectionConverters.*
     import org.apache.ivy.core.resolve.IvyNode
     report.getDependencies.asInstanceOf[java.util.List[IvyNode]].asScala.toSeq map (_.getResolvedId)
-  }
 
   /** Exceptions are logged to the update log file. */
-  private def logExceptions(report: ResolveReport): Unit = {
-    for unresolved <- report.getUnresolvedDependencies do {
+  private def logExceptions(report: ResolveReport): Unit =
+    for unresolved <- report.getUnresolvedDependencies do
       val problem = unresolved.getProblem
       if problem != null then problem.printStackTrace(logWriter)
-    }
-  }
-  private final class ArtifactFilter(f: IArtifact => Boolean) extends Filter {
-    def accept(o: Any) = o match { case a: IArtifact => f(a); case _ => false }
-  }
+  private final class ArtifactFilter(f: IArtifact => Boolean) extends Filter:
+    def accept(o: Any) = o match
+      case a: IArtifact => f(a);
+      case _            => false
 
   /** Retrieves resolved dependencies using the given target to determine the location to retrieve to. */
   private def retrieve(
@@ -401,7 +381,7 @@ final class Update(config: UpdateConfiguration) {
       module: ModuleDescriptor,
       target: UpdateTarget,
       autoScalaVersion: Option[String]
-  ): Unit = {
+  ): Unit =
     val retrieveOptions = new RetrieveOptions
     val retrieveEngine = new ParallelRetrieveEngine(settings, eventManager)
     val (pattern, extraFilter) =
@@ -415,35 +395,30 @@ final class Update(config: UpdateConfiguration) {
     retrieveOptions.setDestArtifactPattern(baseDirectoryName(scalaOrg, scalaV) + "/" + pattern)
     retrieveEngine.retrieve(module.getModuleRevisionId, retrieveOptions)
     ()
-  }
-  private def notCoreScala(a: IArtifact) = a.getName match {
+  private def notCoreScala(a: IArtifact) = a.getName match
     case LibraryModuleName | CompilerModuleName => false
     case _                                      => true
-  }
   private def retrieveType(tpe: String): Boolean = tpe == "jar" || tpe == "bundle"
 
   /** Add the Sonatype OSS repositories */
-  private def addResolvers(settings: IvySettings): Unit = {
-    val newDefault = new ChainResolver {
+  private def addResolvers(settings: IvySettings): Unit =
+    val newDefault = new ChainResolver:
       override def locate(artifact: IArtifact) =
         if hasImplicitClassifier(artifact) then null else super.locate(artifact)
-    }
     newDefault.setName("redefined-public")
     if repositories.isEmpty then error("no repositories defined")
-    for {
+    for
       repo <- repositories if includeRepo(repo)
       irepo <- toIvyRepositories(settings, repo)
-    } newDefault.add(irepo)
+    do newDefault.add(irepo)
     configureCache(settings)
     settings.addResolver(newDefault)
     settings.setDefaultResolver(newDefault.getName)
-  }
   // infrastructure is needed to avoid duplication between this class and the ivy/ subproject
-  private def hasImplicitClassifier(artifact: IArtifact): Boolean = {
+  private def hasImplicitClassifier(artifact: IArtifact): Boolean =
     import scala.jdk.CollectionConverters.*
     artifact.getQualifiedExtraAttributes.asScala.keys
       .exists(_.asInstanceOf[String].startsWith("m:"))
-  }
   // exclude the local Maven repository for Scala -SNAPSHOTs
   private def includeRepo(repo: xsbti.Repository) =
     !(Repository.isMavenLocal(repo) && isSnapshot(getScalaVersion))
@@ -451,19 +426,17 @@ final class Update(config: UpdateConfiguration) {
   private val Snapshot = "-SNAPSHOT"
   private val ChangingPattern = ".*" + Snapshot
   private val ChangingMatcher = PatternMatcher.REGEXP
-  private def configureCache(settings: IvySettings): Unit = {
+  private def configureCache(settings: IvySettings): Unit =
     configureResolutionCache(settings)
     configureRepositoryCache(settings)
-  }
-  private def configureResolutionCache(settings: IvySettings): Unit = {
+  private def configureResolutionCache(settings: IvySettings): Unit =
     resolutionCacheBase.mkdirs()
     val drcm = new DefaultResolutionCacheManager(resolutionCacheBase)
     drcm.setSettings(settings)
     settings.setResolutionCacheManager(drcm)
-  }
-  private def configureRepositoryCache(settings: IvySettings): Unit = {
+  private def configureRepositoryCache(settings: IvySettings): Unit =
     val cacheDir = settings.getDefaultRepositoryCacheBasedir()
-    val manager = new DefaultRepositoryCacheManager("default-cache", settings, cacheDir) {
+    val manager = new DefaultRepositoryCacheManager("default-cache", settings, cacheDir):
       // ignore resolvers wherever possible- not ideal, but avoids issues like #704
       override def saveResolvers(
           descriptor: ModuleDescriptor,
@@ -475,24 +448,21 @@ final class Update(config: UpdateConfiguration) {
           revId: ModuleRevisionId,
           options: CacheMetadataOptions,
           r: String
-      ) = {
+      ) =
         super.findModuleInCache(dd, revId, options, null)
-      }
-    }
     manager.setUseOrigin(true)
     manager.setChangingMatcher(ChangingMatcher)
     manager.setChangingPattern(ChangingPattern)
     settings.addRepositoryCacheManager(manager)
     settings.setDefaultRepositoryCacheManager(manager)
-  }
 
   @nowarn
   private def toIvyRepositories(
       settings: IvySettings,
       repo: xsbti.Repository
-  ): Seq[plugins.resolver.RepositoryResolver] = {
+  ): Seq[plugins.resolver.RepositoryResolver] =
     import xsbti.Predefined.*
-    repo match {
+    repo match
       case m: xsbti.MavenRepository =>
         mavenResolver(m.id, m.url.toString, m.allowInsecureProtocol) :: Nil
       case i: xsbti.IvyRepository =>
@@ -512,7 +482,7 @@ final class Update(config: UpdateConfiguration) {
           "https://oss.sonatype.org/content/repositories/releases",
           false
         )
-        p.id match {
+        p.id match
           case Local =>
             localResolver(settings.getDefaultIvyUserDir.getAbsolutePath) :: Nil
           case MavenLocal =>
@@ -528,9 +498,6 @@ final class Update(config: UpdateConfiguration) {
               s"[warn] [launcher] ${p.id} is deprecated or no longer available; remove from repositories"
             )
             Nil
-        }
-    }
-  }
 
   /** Uses the pattern defined in BuildConfiguration to download sbt from Google code. */
   private def urlResolver(
@@ -542,7 +509,7 @@ final class Update(config: UpdateConfiguration) {
       descriptorOptional: Boolean,
       skipConsistencyCheck: Boolean,
       allowInsecureProtocol: Boolean
-  ) = {
+  ) =
     val resolver = new URLResolver
     resolver.setName(id)
     resolver.addIvyPattern(adjustPattern(base, ivyPattern))
@@ -554,13 +521,8 @@ final class Update(config: UpdateConfiguration) {
     )
     resolver.setCheckconsistency(!skipConsistencyCheck)
     if allowInsecureProtocol then ()
-    else {
-      if isInsecureUrl(base) then {
-        warnHttp(base)
-      }
-    }
+    else if isInsecureUrl(base) then warnHttp(base)
     resolver
-  }
   private def adjustPattern(base: String, pattern: String): String =
     (if base.endsWith("/") || isEmpty(base) then base else (base + "/")) + pattern
   private def mavenLocal =
@@ -571,29 +533,24 @@ final class Update(config: UpdateConfiguration) {
     )
 
   /** Creates a maven-style resolver. */
-  private def mavenResolver(name: String, root: String, allowInsecureProtocol: Boolean) = {
+  private def mavenResolver(name: String, root: String, allowInsecureProtocol: Boolean) =
     val resolver = new IBiblioResolver
     resolver.setName(name)
     resolver.setM2compatible(true)
     resolver.setRoot(root)
-    if !allowInsecureProtocol && isInsecureUrl(root) then {
-      warnHttp(root)
-    }
+    if !allowInsecureProtocol && isInsecureUrl(root) then warnHttp(root)
     resolver
-  }
-  private def warnHttp(value: String): Unit = {
+  private def warnHttp(value: String): Unit =
     log(
       s"[warn] [launcher] insecure HTTP request is deprecated '$value'; switch to HTTPS or opt-in as ',allowInsecureProtocol'"
     )
-  }
-  private def isInsecureUrl(str: String): Boolean = {
+  private def isInsecureUrl(str: String): Boolean =
     // don't try to parse str as URL because it could contain $variable from Ivy pattern
     str.startsWith("http:") &&
-    !(str.startsWith("http://localhost/")
-      || str.startsWith("http://localhost:")
-      || str.startsWith("http://127.0.0.1/")
-      || str.startsWith("http://127.0.0.1:"))
-  }
+      !(str.startsWith("http://localhost/")
+        || str.startsWith("http://localhost:")
+        || str.startsWith("http://127.0.0.1/")
+        || str.startsWith("http://127.0.0.1:"))
   private def centralRepositoryRoot: String = "https://repo1.maven.org/maven2/"
 
   /** Creates a resolver for Maven Central. */
@@ -602,18 +559,17 @@ final class Update(config: UpdateConfiguration) {
   /** Creates a maven-style resolver with the default root. */
   private def defaultMavenResolver(name: String) =
     mavenResolver(name, centralRepositoryRoot, false)
-  private def localResolver(ivyUserDirectory: String) = {
+  private def localResolver(ivyUserDirectory: String) =
     val localIvyRoot = ivyUserDirectory + "/local"
     val resolver = new FileSystemResolver
     resolver.setName(LocalIvyName)
     resolver.addIvyPattern(localIvyRoot + "/" + LocalIvyPattern)
     resolver.addArtifactPattern(localIvyRoot + "/" + LocalArtifactPattern)
     resolver
-  }
   private val SnapshotPattern = Pattern.compile("""(\d+).(\d+).(\d+)-(\d{8})\.(\d{6})-(\d+|\+)""")
-  private def scalaSnapshots(scalaVersion: String) = {
+  private def scalaSnapshots(scalaVersion: String) =
     val m = SnapshotPattern.matcher(scalaVersion)
-    if m.matches then {
+    if m.matches then
       val base = List(1, 2, 3).map(m.group).mkString(".")
       val pattern =
         "https://oss.sonatype.org/content/repositories/snapshots/[organization]/[module]/" + base + "-SNAPSHOT/[artifact]-[revision](-[classifier]).[ext]"
@@ -623,25 +579,20 @@ final class Update(config: UpdateConfiguration) {
       resolver.setM2compatible(true)
       resolver.addArtifactPattern(pattern)
       resolver
-    } else
+    else
       mavenResolver(
         "Sonatype Snapshots Repository",
         "https://oss.sonatype.org/content/repositories/snapshots",
         false
       )
-  }
 
   /** Logs the given message to a file and to the console. */
-  private def log(msg: String) = {
-    try {
-      logWriter.println(msg)
-    } catch {
+  private def log(msg: String) =
+    try logWriter.println(msg)
+    catch
       case e: Exception =>
         Console.err.println("[error] [launcher] error writing to update log file: " + e.toString)
-    }
     Console.err.println(msg)
-  }
-}
 
 import SbtIvyLogger.{ acceptError, acceptMessage, isAlwaysIgnoreMessage }
 
@@ -650,26 +601,21 @@ import SbtIvyLogger.{ acceptError, acceptMessage, isAlwaysIgnoreMessage }
  * intentionally filtered using proguard and about 'unknown resolver'.
  */
 private final class SbtIvyLogger(logWriter: PrintWriter)
-    extends DefaultMessageLogger(Message.MSG_INFO) {
+    extends DefaultMessageLogger(Message.MSG_INFO):
   override def log(msg: String, level: Int): Unit =
     if isAlwaysIgnoreMessage(msg) then ()
-    else {
+    else
       logWriter.println(msg)
-      if level <= getLevel && acceptMessage(msg) then {
-        Console.err.println(msg)
-      }
-    }
-  override def rawlog(msg: String, level: Int): Unit = { log(msg, level) }
+      if level <= getLevel && acceptMessage(msg) then Console.err.println(msg)
+  override def rawlog(msg: String, level: Int): Unit = log(msg, level)
 
   /** This is a hack to filter error messages about 'unknown resolver ...'. */
   override def error(msg: String) = if acceptError(msg) then super.error(msg)
-}
-private final class SbtMessageLoggerEngine extends MessageLoggerEngine {
+private final class SbtMessageLoggerEngine extends MessageLoggerEngine:
 
   /** This is a hack to filter error messages about 'unknown resolver ...'. */
   override def error(msg: String) = if acceptError(msg) then super.error(msg)
-}
-private object SbtIvyLogger {
+private object SbtIvyLogger:
   val IgnorePrefix = "impossible to define"
   val UnknownResolver = "unknown resolver"
   def acceptError(msg: String) = acceptMessage(msg) && !msg.startsWith(UnknownResolver)
@@ -677,4 +623,3 @@ private object SbtIvyLogger {
   def isAlwaysIgnoreMessage(msg: String): Boolean =
     (msg eq null) ||
       msg.startsWith("setting 'http.proxyPassword'")
-}

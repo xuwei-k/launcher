@@ -2,7 +2,7 @@ package xsbt.boot
 
 import java.net.URI
 
-object ConfigurationParserTest extends verify.BasicTestSuite {
+object ConfigurationParserTest extends verify.BasicTestSuite:
   test("Configuration parser should correct parse bootOnly") {
     repoFileContains(
       """|[repositories]
@@ -177,4 +177,3 @@ object ConfigurationParserTest extends verify.BasicTestSuite {
 
   def loadRepoFile(file: String) =
     (new ConfigurationParser).readRepositoriesConfig(file)
-}

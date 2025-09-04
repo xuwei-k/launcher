@@ -2,7 +2,7 @@ package xsbt.boot
 
 import org.scalacheck.*
 
-object ListMapProperties extends Properties("ListMap") {
+object ListMapProperties extends Properties("ListMap"):
   implicit val genListMap: Arbitrary[ListMap[Int, Int]] = Arbitrary(
     for (list <- Arbitrary.arbitrary[List[(Int, Int)]]) yield ListMap(list*)
   )
@@ -28,13 +28,11 @@ object ListMapProperties extends Properties("ListMap") {
     { Prop.throws(classOf[Exception])(ListMap.empty(key)) }
     { !ListMap.empty.contains(key) } && { ListMap.empty.get(key).isEmpty }
   }
-}
 
-object ListMapEmpty extends Properties("ListMap.empty") {
+object ListMapEmpty extends Properties("ListMap.empty"):
   import ListMap.empty
   property("isEmpty") = empty.isEmpty
   property("toList.isEmpty") = empty.toList.isEmpty
   property("toSeq.isEmpty") = empty.toSeq.isEmpty
   property("keys.isEmpty") = empty.keys.isEmpty
   property("iterator.isEmpty") = empty.iterator.isEmpty
-}

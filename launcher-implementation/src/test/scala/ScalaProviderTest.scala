@@ -6,7 +6,7 @@ import xsbti.{ Repository as _, Launcher as _, * }
 import LaunchTest.*
 import sbt.io.IO.{ createDirectory, touch, withTemporaryDirectory }
 
-object ScalaProviderTest extends verify.BasicTestSuite {
+object ScalaProviderTest extends verify.BasicTestSuite:
   test("Launch should provide ClassLoader for Scala 2.10.7") {
     checkScalaLoader("2.10.7")
   }
@@ -89,19 +89,18 @@ object ScalaProviderTest extends verify.BasicTestSuite {
 
   private def testResources = List("test-resourceA", "a/b/test-resourceB", "sub/test-resource")
 
-  private def createExtra(currentDirectory: File) = {
+  private def createExtra(currentDirectory: File) =
     val resourceDirectory = new File(currentDirectory, "resources")
     createDirectory(resourceDirectory)
     testResources.foreach(resource =>
       touch(new File(resourceDirectory, resource.replace('/', File.separatorChar)))
     )
     Array(resourceDirectory)
-  }
 
   private def checkScalaLoader(version: String) =
     withLauncher(checkLauncher(version, mapScalaVersion(version)))
 
-  private def checkLauncher(version: String, versionValue: String)(launcher: xsbti.Launcher) = {
+  private def checkLauncher(version: String, versionValue: String)(launcher: xsbti.Launcher) =
     import scala.languageFeature.reflectiveCalls
     import scala.reflect.Selectable.reflectiveSelectable
     val provider = launcher.getScala(version)
@@ -112,20 +111,17 @@ object ScalaProviderTest extends verify.BasicTestSuite {
 
     val libraryLoader = provider.loader.getParent
     // Test the structural type
-    libraryLoader match {
+    libraryLoader match
       case x: (ClassLoader & LibraryLoader) @unchecked =>
         assert(x.scalaVersion == version)
-    }
     tryScala(libraryLoader, libraryLoader)
-  }
 
   private def tryScala(loader: ClassLoader, libraryLoader: ClassLoader) =
     assert(Class.forName("scala.Product", false, loader).getClassLoader == libraryLoader)
 
   type LibraryLoader = { def scalaVersion: String }
-}
 
-object LaunchTest {
+object LaunchTest:
   def testApp(main: String): Application = testApp(main, Array[File]())
   def testApp(main: String, extra: Array[File]): Application =
     Application(
@@ -159,13 +155,10 @@ object LaunchTest {
 
   private def getProperty(loader: ClassLoader, res: String, prop: String) =
     loadProperties(loader.getResourceAsStream(res)).getProperty(prop)
-  private def loadProperties(propertiesStream: InputStream): Properties = {
+  private def loadProperties(propertiesStream: InputStream): Properties =
     val properties = new Properties
-    try {
+    try
       properties.load(propertiesStream)
-    } finally {
+    finally
       propertiesStream.close()
-    }
     properties
-  }
-}

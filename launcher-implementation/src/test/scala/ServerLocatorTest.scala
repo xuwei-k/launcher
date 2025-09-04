@@ -3,7 +3,7 @@ package xsbt.boot
 import java.io.File
 import sbt.io.IO.withTemporaryDirectory
 
-object ServerLocatorTest extends verify.BasicTestSuite {
+object ServerLocatorTest extends verify.BasicTestSuite:
 
   // TODO - Maybe use scalacheck to randomnly generate URIs
   test("ServerLocator read and write server URI properties") {
@@ -17,14 +17,12 @@ object ServerLocatorTest extends verify.BasicTestSuite {
 
   test("ServerLocator detect listening ports") {
     val serverSocket = new java.net.ServerSocket(0)
-    object serverThread extends Thread {
-      override def run(): Unit = {
+    object serverThread extends Thread:
+      override def run(): Unit =
         // Accept one connection.
         val result = serverSocket.accept()
         result.close()
         serverSocket.close()
-      }
-    }
     serverThread.start()
     val uri = new java.net.URI(
       s"http://${serverSocket.getInetAddress.getHostAddress}:${serverSocket.getLocalPort}"
@@ -44,4 +42,3 @@ object ServerLocatorTest extends verify.BasicTestSuite {
       finally inputStream.close()
     assert(result == Some(expected))
   }
-}

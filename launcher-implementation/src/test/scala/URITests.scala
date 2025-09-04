@@ -6,7 +6,7 @@ import Configuration.*
 import java.io.File
 import java.net.URI
 
-object URITests extends Properties("URI Tests") {
+object URITests extends Properties("URI Tests"):
   // Need a platform-specific root, otherwise URI will not be absolute (e.g. if we use a "/a/b/c" path in Windows)
   // Note:
   // If I use "C:" instead of "/C:", then isAbsolute == true for the resulting URI, but resolve is broken:
@@ -63,5 +63,3 @@ object URITests extends Properties("URI Tests") {
       (fpURI.getPath == decoded) &&
       (fpURI.getRawPath == encoded)
   }
-
-}

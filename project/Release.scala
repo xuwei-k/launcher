@@ -1,6 +1,6 @@
-import com.typesafe.sbt.JavaVersionCheckPlugin.autoImport._
-import sbt.Keys._
-import sbt._
+import com.typesafe.sbt.JavaVersionCheckPlugin.autoImport.*
+import sbt.Keys.*
+import sbt.*
 
 object Release {
   def settings: Seq[Setting[?]] = javaVersionCheckSettings

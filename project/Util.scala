@@ -1,5 +1,5 @@
-import sbt._
-import Keys._
+import sbt.*
+import Keys.*
 import sbt.internal.inc.Analysis
 import xsbti.compile.CompileAnalysis
 

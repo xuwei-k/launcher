@@ -1,6 +1,6 @@
-import sbt._
-import Keys._
-import Path._
+import sbt.*
+import Keys.*
+import Path.*
 
 object Transform {
   lazy val transformSources = TaskKey[Seq[File]]("transform-sources")

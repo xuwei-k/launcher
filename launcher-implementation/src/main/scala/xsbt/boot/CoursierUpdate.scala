@@ -143,8 +143,16 @@ class CousierUpdate(config: UpdateConfiguration) {
           ),
           u.classifiers
         ) :::
-          (scalaVersion match {
-            case Some(sv) if sv != "auto" =>
+          (scalaVersion match
+            case Some(sv) if sv.startsWith("3.") =>
+              withPublication(
+                Dependency(
+                  Module(Organization(scalaOrg), ModuleName(Library3ModuleName)),
+                  sv
+                ),
+                u.classifiers
+              )
+            case Some(sv) if sv.startsWith("2.") =>
               withPublication(
                 Dependency(
                   Module(Organization(scalaOrg), ModuleName(LibraryModuleName)),

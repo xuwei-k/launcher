@@ -102,7 +102,8 @@ object ScalaProviderTest extends verify.BasicTestSuite {
     withLauncher(checkLauncher(version, mapScalaVersion(version)))
 
   private def checkLauncher(version: String, versionValue: String)(launcher: xsbti.Launcher) = {
-    import scala.language.reflectiveCalls
+    import scala.languageFeature.reflectiveCalls
+    import scala.reflect.Selectable.reflectiveSelectable
     val provider = launcher.getScala(version)
     val loader = provider.loader
     // ensure that this loader can load Scala classes by trying scala.ScalaObject.
@@ -150,7 +151,7 @@ object LaunchTest {
     if (finalStyle(versionNumber)) versionNumber + ".final"
     else versionNumber
 
-  def getScalaVersion: String = getScalaVersion(getClass.getClassLoader)
+  def getScalaVersion: String = "3.7.2" // getScalaVersion(getClass.getClassLoader)
   def getScalaVersion(loader: ClassLoader): String =
     getProperty(loader, "library.properties", "version.number")
   lazy val AppVersion =

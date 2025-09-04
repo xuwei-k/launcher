@@ -261,12 +261,9 @@ class Launch private[xsbt] (
     val existingLoader =
       if (jansiHome.exists)
         try Some(makeLoader())
-        catch {
-          case e: Exception => None
-        }
-      else
-        None
-    existingLoader getOrElse {
+        catch case e: Exception => None
+      else None
+    existingLoader.getOrElse {
       update(module, "")
       makeLoader()
     }
@@ -373,17 +370,16 @@ class Launch private[xsbt] (
     val resolvedId = resolveId(retrievedApp.resolvedAppVersion, id)
 
     val (missing, appProvider) = checkedAppProvider(resolvedId, retrievedApp, scalaProvider)
-    if (missing.isEmpty)
-      appProvider
-    else if (retrievedApp.fresh)
-      app.retrieveCorrupt(missing)
-    else
-      getAppProvider0(resolvedId, explicitScalaVersion, true)
-  }
+    if missing.isEmpty then appProvider
+    else if retrievedApp.fresh then app.retrieveCorrupt(missing)
+    else getAppProvider0(resolvedId, explicitScalaVersion, true)
+
   def scalaHome(scalaOrg: String, scalaVersion: Option[String]): File =
     new File(bootDirectory, baseDirectoryName(scalaOrg, scalaVersion))
+
   def appHome(id: xsbti.ApplicationID, scalaVersion: Option[String]): File =
     appDirectory(scalaHome(ScalaOrg, scalaVersion), id)
+
   def checkedAppProvider(
       id: xsbti.ApplicationID,
       module: RetrievedModule,
@@ -552,12 +548,12 @@ class Launch private[xsbt] (
   )
 
   /** Returns the resolved appVersion (if this was an App), as well as the scalaVersion. */
-  def update(mm: ModuleDefinition, reason: String): (Option[String], Option[String]) = {
+  def update(mm: ModuleDefinition, reason: String): (Option[String], Option[String]) =
     val result = (new Update(mm.configuration))(mm.target, reason)
-    if (result.success) result.appVersion -> result.scalaVersion else mm.retrieveFailed
-  }
-}
-object Launcher {
+    if result.success then result.appVersion -> result.scalaVersion
+    else mm.retrieveFailed
+
+object Launcher:
   def apply(bootDirectory: File, repositories: List[Repository.Repository]): xsbti.Launcher =
     apply(
       bootDirectory,

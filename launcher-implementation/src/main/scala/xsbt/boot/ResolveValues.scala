@@ -7,8 +7,8 @@ import Pre._
 
 object ResolveValues {
   def apply(conf: LaunchConfiguration): LaunchConfiguration = (new ResolveValues(conf))()
-  private def trim(s: String) = if (s eq null) None else notEmpty(s.trim)
-  private def notEmpty(s: String) = if (isEmpty(s)) None else Some(s)
+  private def trim(s: String): Option[String] = if (s eq null) None else notEmpty(s.trim)
+  private def notEmpty(s: String): Option[String] = if (isEmpty(s)) None else Some(s)
 }
 
 import ResolveValues.{ trim }
@@ -30,11 +30,12 @@ final class ResolveValues(conf: LaunchConfiguration) {
     val appClassifiers = "" :: resolve(classifiers.app)
     Classifiers(new Explicit(scalaClassifiers), new Explicit(appClassifiers))
   }
-  def resolve[T](v: Value[T])(implicit read: String => T): T =
+  def resolve[T](v: Value[T])(using read: String => T): T =
     v match {
       case e: Explicit[t] => e.value
       case i: Implicit[t] =>
-        trim(properties.getProperty(i.name)) map read orElse
-          i.default getOrElse ("no " + i.name + " specified in " + propertiesFile)
+        trim(properties.getProperty(i.name)).map(read)
+          .orElse(i.default)
+          .getOrElse(sys.error("no " + i.name + " specified in " + propertiesFile))
     }
 }

@@ -10,5 +10,10 @@ object Deps {
 
   // TODO - these should be like the above, just ModuleIDs
   lazy val ivy = "org.scala-sbt.ivy" % "ivy" % "2.3.0-sbt-77cc781d727b367d3761f097d89f5a4762771d41"
-  lazy val coursier = "io.get-coursier" %% "coursier" % "2.0.16"
+  val coursierVersion = "2.1.23"
+  lazy val coursier = ("io.get-coursier" %% "coursier" % coursierVersion)
+    .cross(CrossVersion.for3Use2_13)
+    .exclude("org.codehaus.plexus", "plexus-archiver")
+    .exclude("org.codehaus.plexus", "plexus-container-default")
+    .exclude("org.codehaus.plexus", "plexus-container-default")
 }

@@ -267,10 +267,11 @@ class ConfigurationParser {
     }
   }
   def getAppProperties(m: LabelMap): List[AppProperty] =
-    for ((name, Some(value)) <- m.toList) yield {
-      val map = ListMap(trim(value.split(",")).map(parsePropertyDefinition(name)): _*)
-      AppProperty(name)(map.get("quick"), map.get("new"), map.get("fill"))
-    }
+    m.toList.flatMap:
+      case (name, Some(value)) =>
+        val map = ListMap(trim(value.split(",")).map(parsePropertyDefinition(name))*)
+        List(AppProperty(name)(map.get("quick"), map.get("new"), map.get("fill")))
+      case _ => Nil
   def parsePropertyDefinition(name: String)(value: String) = value.split("=", 2) match {
     case Array(mode, value) => (mode, parsePropertyValue(name, value)(defineProperty(name)))
     case x => Pre.error("invalid property definition '" + x + "' for property '" + name + "'")

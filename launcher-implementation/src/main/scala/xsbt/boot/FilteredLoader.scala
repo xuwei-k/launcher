@@ -4,7 +4,7 @@
 package xsbt.boot
 
 import BootConfiguration.{ FjbgPackage, IvyPackage, SbtBootPackage, ScalaPackage }
-import scala.collection.immutable.Stream
+import scala.collection.immutable.LazyList
 
 /**
  * A custom class loader to ensure the main part of sbt doesn't load any Scala or
@@ -29,9 +29,9 @@ private[boot] final class BootFilteredLoader(parent: ClassLoader) extends ClassL
 }
 
 object Loaders {
-  def apply(loader: ClassLoader): Stream[ClassLoader] = {
-    def loaders(loader: ClassLoader, accum: Stream[ClassLoader]): Stream[ClassLoader] =
-      if loader eq null then accum else loaders(loader.getParent, Stream.cons(loader, accum))
-    loaders(loader, Stream.empty)
+  def apply(loader: ClassLoader): LazyList[ClassLoader] = {
+    def loaders(loader: ClassLoader, accum: LazyList[ClassLoader]): LazyList[ClassLoader] =
+      if loader eq null then accum else loaders(loader.getParent, loader #:: accum)
+    loaders(loader, LazyList.empty)
   }
 }

@@ -195,9 +195,8 @@ object ServerLauncher {
 
   object ServerUriLine {
     def unapply(in: String): Option[URI] =
-      if in startsWith SERVER_SYNCH_TEXT then {
-        Some(new URI(in.substring(SERVER_SYNCH_TEXT.size)))
-      } else None
+      if in.startsWith(SERVER_SYNCH_TEXT) then Some(new URI(in.substring(SERVER_SYNCH_TEXT.size)))
+      else None
   }
 
   /** Reads an input steam until it hits the server synch text and server URI. */

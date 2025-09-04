@@ -15,7 +15,7 @@ object ConfigurationParser {
   def trim(s: Array[String]) = s.map(_.trim).toList
   def ids(value: String) = trim(substituteVariables(value).split(",")).filter(isNonEmpty)
 
-  private[this] lazy val VarPattern = Pattern.compile("""\$\{([\w.]+)(\-(.*))?\}""")
+  private lazy val VarPattern = Pattern.compile("""\$\{([\w.]+)(\-(.*))?\}""")
   def substituteVariables(s: String): String =
     if s.indexOf('$') >= 0 then substituteVariables0(s) else s
   // scala.util.Regex brought in 30kB, so we code it explicitly
@@ -37,7 +37,7 @@ object ConfigurationParser {
     b.toString
   }
 
-  implicit val readIDs: String => List[String] = ids _
+  implicit val readIDs: String => List[String] = ids(_)
 }
 class ConfigurationParser {
   def apply(file: File): LaunchConfiguration = Using(newReader(file))(apply)
@@ -116,7 +116,7 @@ class ConfigurationParser {
     } catch { case e: BootException => new Explicit(read(value)) }
   }
   def processSection[T](sections: SectionMap, name: String, f: LabelMap => T) =
-    process[String, LabelMap, T](sections, name, m => f(m default (x => None)))
+    process[String, LabelMap, T](sections, name, m => f(m.default(x => None)))
   def process[K, V, T](sections: ListMap[K, V], name: K, f: V => T): (T, ListMap[K, V]) =
     (f(sections(name)), sections - name)
   def check(map: ListMap[String, ?], label: String): Unit =
@@ -284,7 +284,7 @@ class ConfigurationParser {
       case "set"    => new SetProperty(requiredArg)
       case _        => Pre.error("unknown action '" + action + "' for property '" + name + "'")
     }
-  private[this] lazy val propertyPattern =
+  private lazy val propertyPattern =
     Pattern.compile("""(.+)\((.*)\)(?:\[(.*)\])?""") // examples: prompt(Version)[1.0] or set(1.0)
   def parsePropertyValue[T](name: String, definition: String)(
       f: (String, String, Option[String]) => T

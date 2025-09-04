@@ -52,6 +52,6 @@ object PreTest extends Properties("Pre") {
       Some(t)
     } catch { case e: Exception => None }
 
-  private[this] def objArrEquals[T <: AnyRef](a: Array[T], b: Array[T]): Boolean =
+  private def objArrEquals[T <: AnyRef](a: Array[T], b: Array[T]): Boolean =
     arrEquals(a.asInstanceOf[Array[AnyRef]], b.asInstanceOf[Array[AnyRef]])
 }

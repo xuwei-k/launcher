@@ -17,11 +17,11 @@ object GetLocks {
    */
   def find: xsbti.GlobalLock =
     Loaders(getClass.getClassLoader.getParent).flatMap(tryGet).headOption.getOrElse(Locks)
-  private[this] def tryGet(loader: ClassLoader): List[xsbti.GlobalLock] =
+  private def tryGet(loader: ClassLoader): List[xsbti.GlobalLock] =
     try {
       getLocks0(loader) :: Nil
     } catch { case e: ClassNotFoundException => Nil }
-  private[this] def getLocks0(loader: ClassLoader) =
+  private def getLocks0(loader: ClassLoader) =
     Class
       .forName("xsbt.boot.Locks$", true, loader)
       .getField("MODULE$")
@@ -31,10 +31,10 @@ object GetLocks {
 
 // gets a file lock by first getting a JVM-wide lock.
 object Locks extends xsbti.GlobalLock {
-  private[this] val locks = new Cache[File, Unit, GlobalLock]((f, _) => new GlobalLock(f))
+  private val locks = new Cache[File, Unit, GlobalLock]((f, _) => new GlobalLock(f))
   def apply[T](file: File, action: Callable[T]): T =
     if file eq null then action.call else apply0(file, action)
-  private[this] def apply0[T](file: File, action: Callable[T]): T = {
+  private def apply0[T](file: File, action: Callable[T]): T = {
     val lock =
       synchronized {
         file.getParentFile.mkdirs()
@@ -47,8 +47,8 @@ object Locks extends xsbti.GlobalLock {
     lock.withLock(action)
   }
 
-  private[this] class GlobalLock(file: File) {
-    private[this] var fileLocked = false
+  private class GlobalLock(file: File) {
+    private var fileLocked = false
     def withLock[T](run: Callable[T]): T =
       synchronized {
         if fileLocked then run.call
@@ -64,7 +64,7 @@ object Locks extends xsbti.GlobalLock {
 
     // https://github.com/sbt/sbt/issues/650
     // This approach means a real deadlock won't be detected
-    @tailrec private[this] def ignoringDeadlockAvoided[T](run: Callable[T]): T = {
+    @tailrec private def ignoringDeadlockAvoided[T](run: Callable[T]): T = {
       val result =
         try {
           Some(withFileLock(run))
@@ -81,10 +81,10 @@ object Locks extends xsbti.GlobalLock {
     }
 
     // The actual message is not specified by FileChannel.lock, so this may need to be adjusted for different JVMs
-    private[this] def isDeadlockAvoided(i: IOException): Boolean =
+    private def isDeadlockAvoided(i: IOException): Boolean =
       i.getMessage == "Resource deadlock avoided"
 
-    private[this] def withFileLock[T](run: Callable[T]): T = {
+    private def withFileLock[T](run: Callable[T]): T = {
       def withChannelRetries(retries: Int)(channel: FileChannel): T =
         try {
           withChannel(channel)
@@ -120,5 +120,5 @@ object Locks extends xsbti.GlobalLock {
       Using(new FileOutputStream(file).getChannel)(withChannelRetries(5))
     }
   }
-  private[this] final class InternalLockNPE(cause: Exception) extends RuntimeException(cause)
+  private final class InternalLockNPE(cause: Exception) extends RuntimeException(cause)
 }

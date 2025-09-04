@@ -11,11 +11,11 @@ object ListMapProperties extends Properties("ListMap") {
     (list: List[(Int, Int)]) =>
       val map = ListMap(list*)
       list forall { entry =>
-        map contains entry._1
+        map.contains(entry._1)
       }
   }
   property("contains added entry") = Prop.forAll { (map: ListMap[Int, Int], key: Int, value: Int) =>
-    { (map + (key -> value)) contains (key) } && { (map + (key -> value))(key) == value } && {
+    { (map + (key -> value)).contains(key) } && { (map + (key -> value))(key) == value } && {
       (map + (key -> value)).get(key) == Some(value)
     }
   }
@@ -35,7 +35,6 @@ object ListMapEmpty extends Properties("ListMap.empty") {
   property("isEmpty") = empty.isEmpty
   property("toList.isEmpty") = empty.toList.isEmpty
   property("toSeq.isEmpty") = empty.toSeq.isEmpty
-  property("toStream.isEmpty") = empty.toStream.isEmpty
   property("keys.isEmpty") = empty.keys.isEmpty
   property("iterator.isEmpty") = empty.iterator.isEmpty
 }

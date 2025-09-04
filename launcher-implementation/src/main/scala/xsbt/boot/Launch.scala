@@ -170,7 +170,7 @@ object Launch {
         )
     }
   }
-  private[this] def withContextLoader[T](loader: ClassLoader)(eval: => T): T = {
+  private def withContextLoader[T](loader: ClassLoader)(eval: => T): T = {
     val oldLoader = Thread.currentThread.getContextClassLoader
     Thread.currentThread.setContextClassLoader(loader)
     try {
@@ -219,13 +219,13 @@ class Launch private[xsbt] (
   val bootLoader = new BootFilteredLoader(getClass.getClassLoader)
 
   @nowarn
-  private[this] val initLoader: ClassLoader = if isWindows && !isCygwin then {
+  private val initLoader: ClassLoader = if isWindows && !isCygwin then {
     val version =
       sys.props.get(Configuration.SbtVersionProperty) orElse Configuration.guessSbtVersion
     if version.fold(false)(_.startsWith("0.")) then jansiLoader(bootLoader) else bootLoader
   } else bootLoader
 
-  private[this] val scalaProviderClassLoader = new AtomicReference(initLoader)
+  private val scalaProviderClassLoader = new AtomicReference(initLoader)
   def topLoader: ClassLoader = scalaProviderClassLoader.get()
   private val scalaProviders = new Cache[(String, String), String, xsbti.ScalaProvider]((x, y) =>
     getScalaProvider(x._1, x._2, y, scalaProviderClassLoader.get)
@@ -280,7 +280,7 @@ class Launch private[xsbt] (
     else module.retrieveCorrupt(missing)
   }
 
-  private[this] def makeConfiguration(
+  private def makeConfiguration(
       scalaOrg: String,
       version: Option[String]
   ): UpdateConfiguration =
@@ -302,7 +302,7 @@ class Launch private[xsbt] (
       def call = getAppProvider0(id, explicitScalaVersion, forceAppUpdate)
     })
 
-  @tailrec private[this] final def getAppProvider0(
+  @tailrec private final def getAppProvider0(
       id: xsbti.ApplicationID,
       explicitScalaVersion0: Option[String],
       forceAppUpdate: Boolean
@@ -386,7 +386,7 @@ class Launch private[xsbt] (
     val missing = getMissing(p.loader, id.mainClass :: Nil)
     (missing, p)
   }
-  private[this] def locked[T](c: Callable[T]): T = Locks(orNull(updateLockFile), c)
+  private def locked[T](c: Callable[T]): T = Locks(orNull(updateLockFile), c)
   def getScalaProvider(
       scalaOrg: String,
       scalaVersion: String,
@@ -397,7 +397,7 @@ class Launch private[xsbt] (
       def call = getScalaProvider0(scalaOrg, scalaVersion, reason, classLoader)
     })
 
-  private[this] final def getScalaProvider0(
+  private final def getScalaProvider0(
       scalaOrg: String,
       scalaVersion: String,
       reason: String,

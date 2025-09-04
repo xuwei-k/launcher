@@ -26,26 +26,17 @@ object Util {
   )
   lazy val base: Seq[Setting[?]] = baseScalacOptions ++ Licensed.settings
   lazy val baseScalacOptions = Seq(
-    scalacOptions ++= Seq("-Xelide-below", "0"),
     scalacOptions ++= {
-      CrossVersion.partialVersion(scalaVersion.value) match {
-        case Some((2, 9)) => Nil // support 2.9 for some subprojects for the Scala Eclipse IDE
-        case _            =>
-          Seq(
-            "-feature",
-            "-language:implicitConversions",
-            "-language:postfixOps",
-            "-language:higherKinds",
-            "-language:existentials"
-          )
-      }
+      Seq(
+        "-deprecation",
+        "-feature",
+        "-language:implicitConversions",
+        "-language:postfixOps",
+        "-language:higherKinds",
+        "-language:existentials",
+        "-Werror",
+      )
     },
-    scalacOptions ++= {
-      CrossVersion.partialVersion(scalaVersion.value) match {
-        case Some((2, 13)) => Seq("-deprecation", "-Xlint", "-Xsource:3")
-        case _             => Seq()
-      }
-    }
   )
   lazy val minimalSettings: Seq[Setting[?]] = Defaults.paths ++ Seq[Setting[?]](
     crossTarget := target.value,

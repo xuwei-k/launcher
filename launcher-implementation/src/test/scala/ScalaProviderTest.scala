@@ -113,7 +113,7 @@ object ScalaProviderTest extends verify.BasicTestSuite {
     val libraryLoader = provider.loader.getParent
     // Test the structural type
     libraryLoader match {
-      case x: ClassLoader with LibraryLoader @unchecked =>
+      case x: (ClassLoader & LibraryLoader) @unchecked =>
         assert(x.scalaVersion == version)
     }
     tryScala(libraryLoader, libraryLoader)
@@ -157,9 +157,9 @@ object LaunchTest {
   lazy val AppVersion =
     getProperty(getClass.getClassLoader, "sbt.launcher.version.properties", "version")
 
-  private[this] def getProperty(loader: ClassLoader, res: String, prop: String) =
+  private def getProperty(loader: ClassLoader, res: String, prop: String) =
     loadProperties(loader.getResourceAsStream(res)).getProperty(prop)
-  private[this] def loadProperties(propertiesStream: InputStream): Properties = {
+  private def loadProperties(propertiesStream: InputStream): Properties = {
     val properties = new Properties
     try {
       properties.load(propertiesStream)

@@ -127,7 +127,7 @@ final class Update(config: UpdateConfiguration) {
     setScalaVariable(settings, scalaVersion)
     settings
   }
-  private[this] def setScalaVariable(settings: IvySettings, scalaVersion: Option[String]): Unit =
+  private def setScalaVariable(settings: IvySettings, scalaVersion: Option[String]): Unit =
     scalaVersion match { case Some(sv) => settings.setVariable("scala", sv); case None => }
   private lazy val ivy = {
     val ivy = new Ivy() {
@@ -372,13 +372,13 @@ final class Update(config: UpdateConfiguration) {
     autoScala -> extractVersion(modules, dep)
   }
 
-  private[this] def extractVersion(
+  private def extractVersion(
       modules: Seq[ModuleRevisionId],
       dep: ModuleId
   ): Option[String] = {
     modules collectFirst { case m if m.getModuleId.equals(dep) => m.getRevision }
   }
-  private[this] def moduleRevisionIDs(report: ResolveReport): Seq[ModuleRevisionId] = {
+  private def moduleRevisionIDs(report: ResolveReport): Seq[ModuleRevisionId] = {
     import scala.jdk.CollectionConverters.*
     import org.apache.ivy.core.resolve.IvyNode
     report.getDependencies.asInstanceOf[java.util.List[IvyNode]].asScala.toSeq map (_.getResolvedId)
@@ -405,10 +405,9 @@ final class Update(config: UpdateConfiguration) {
     val retrieveOptions = new RetrieveOptions
     val retrieveEngine = new ParallelRetrieveEngine(settings, eventManager)
     val (pattern, extraFilter) =
-      target match {
+      target match
         case _: UpdateScala => (scalaRetrievePattern, const(true))
-        case u: UpdateApp   => (appRetrievePattern(u.id.toID), notCoreScala _)
-      }
+        case u: UpdateApp   => (appRetrievePattern(u.id.toID), notCoreScala(_))
     val filter = (a: IArtifact) =>
       retrieveType(a.getType) && a.getExtraAttribute("classifier") == null && extraFilter(a)
     retrieveOptions.setArtifactFilter(new ArtifactFilter(filter))
@@ -417,7 +416,7 @@ final class Update(config: UpdateConfiguration) {
     retrieveEngine.retrieve(module.getModuleRevisionId, retrieveOptions)
     ()
   }
-  private[this] def notCoreScala(a: IArtifact) = a.getName match {
+  private def notCoreScala(a: IArtifact) = a.getName match {
     case LibraryModuleName | CompilerModuleName => false
     case _                                      => true
   }
@@ -442,26 +441,27 @@ final class Update(config: UpdateConfiguration) {
   // infrastructure is needed to avoid duplication between this class and the ivy/ subproject
   private def hasImplicitClassifier(artifact: IArtifact): Boolean = {
     import scala.jdk.CollectionConverters.*
-    artifact.getQualifiedExtraAttributes.asScala.keys.exists(_.asInstanceOf[String] startsWith "m:")
+    artifact.getQualifiedExtraAttributes.asScala.keys
+      .exists(_.asInstanceOf[String].startsWith("m:"))
   }
   // exclude the local Maven repository for Scala -SNAPSHOTs
   private def includeRepo(repo: xsbti.Repository) =
     !(Repository.isMavenLocal(repo) && isSnapshot(getScalaVersion))
   private def isSnapshot(scalaVersion: String) = scalaVersion.endsWith(Snapshot)
-  private[this] val Snapshot = "-SNAPSHOT"
-  private[this] val ChangingPattern = ".*" + Snapshot
-  private[this] val ChangingMatcher = PatternMatcher.REGEXP
-  private[this] def configureCache(settings: IvySettings): Unit = {
+  private val Snapshot = "-SNAPSHOT"
+  private val ChangingPattern = ".*" + Snapshot
+  private val ChangingMatcher = PatternMatcher.REGEXP
+  private def configureCache(settings: IvySettings): Unit = {
     configureResolutionCache(settings)
     configureRepositoryCache(settings)
   }
-  private[this] def configureResolutionCache(settings: IvySettings): Unit = {
+  private def configureResolutionCache(settings: IvySettings): Unit = {
     resolutionCacheBase.mkdirs()
     val drcm = new DefaultResolutionCacheManager(resolutionCacheBase)
     drcm.setSettings(settings)
     settings.setResolutionCacheManager(drcm)
   }
-  private[this] def configureRepositoryCache(settings: IvySettings): Unit = {
+  private def configureRepositoryCache(settings: IvySettings): Unit = {
     val cacheDir = settings.getDefaultRepositoryCacheBasedir()
     val manager = new DefaultRepositoryCacheManager("default-cache", settings, cacheDir) {
       // ignore resolvers wherever possible- not ideal, but avoids issues like #704
@@ -676,5 +676,5 @@ private object SbtIvyLogger {
   def acceptMessage(msg: String) = (msg ne null) && !msg.startsWith(IgnorePrefix)
   def isAlwaysIgnoreMessage(msg: String): Boolean =
     (msg eq null) ||
-      (msg startsWith "setting 'http.proxyPassword'")
+      msg.startsWith("setting 'http.proxyPassword'")
 }

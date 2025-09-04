@@ -116,10 +116,10 @@ object Configuration {
     else noMatchParts
   }
   def noMatchParts: List[String] = DefaultVersionPart :: fallbackParts
-  private[this] def fullMatchOnly(groups: List[String]): Option[String] =
+  private def fullMatchOnly(groups: List[String]): Option[String] =
     if groups.forall(neNull) then Some(groups.mkString) else None
 
-  private[this] def subPartsIndices =
+  private def subPartsIndices =
     (1 :: 2 :: 3 :: 4 :: Nil) ::
       (1 :: 2 :: 3 :: Nil) ::
       (1 :: 2 :: Nil) ::
@@ -167,5 +167,5 @@ object Configuration {
       val newFile = if file.isFile then file.getParentFile else file
       directoryURI(newFile)
     } catch { case _: Exception => uri }
-  private[this] def neNull: AnyRef => Boolean = _ ne null
+  private def neNull: AnyRef => Boolean = _ ne null
 }

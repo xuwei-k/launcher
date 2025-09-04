@@ -80,7 +80,7 @@ final case class LaunchConfiguration(
       boot.map(f),
       logging,
       appProperties,
-      serverConfig.map(_ map f)
+      serverConfig.map(_.map(f))
     )
 }
 object LaunchConfiguration {

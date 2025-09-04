@@ -176,5 +176,5 @@ object ConfigurationParserTest extends verify.BasicTestSuite {
     assert(loadRepoFile(file).contains(repo))
 
   def loadRepoFile(file: String) =
-    (new ConfigurationParser) readRepositoriesConfig file
+    (new ConfigurationParser).readRepositoriesConfig(file)
 }

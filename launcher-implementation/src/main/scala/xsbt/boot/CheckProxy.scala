@@ -12,7 +12,7 @@ object CheckProxy {
     for pp <- Seq(http, https, ftp) do setFromEnv(pp)
   }
 
-  private[this] def setFromEnv(conf: ProxyProperties): Unit = {
+  private def setFromEnv(conf: ProxyProperties): Unit = {
     import conf.*
     val proxyURL = System.getenv(envURL)
     if isDefined(proxyURL) && !isPropertyDefined(sysHost) && !isPropertyDefined(sysPort) then {

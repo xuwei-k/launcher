@@ -61,7 +61,7 @@ class CousierUpdate(config: UpdateConfiguration) {
   private lazy val coursierCache = {
     import coursier.util.Task
     val credentials = bootCredentials
-    val cache = credentials.foldLeft(FileCache(defaultCacheLocation)(Task.sync)) {
+    val cache = credentials.foldLeft(FileCache(defaultCacheLocation)(using Task.sync)) {
       _.addCredentials(_)
     }
     cache
@@ -372,7 +372,7 @@ class CousierUpdate(config: UpdateConfiguration) {
         base + artifactPattern,
         Some(base + ivyPattern),
       )
-      .right
+      .toOption
       .get
 
   private def localRepository: IvyRepository = {
@@ -384,7 +384,7 @@ class CousierUpdate(config: UpdateConfiguration) {
         root + LocalArtifactPattern,
         Some(root + LocalIvyPattern)
       )
-      .right
+      .toOption
       .get
   }
 

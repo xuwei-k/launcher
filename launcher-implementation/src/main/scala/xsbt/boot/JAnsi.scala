@@ -6,9 +6,9 @@ object JAnsi {
   def uninstall(loader: ClassLoader): Unit = callJAnsi("systemUninstall", loader)
   def install(loader: ClassLoader): Unit = callJAnsi("systemInstall", loader)
 
-  private[this] def callJAnsi(methodName: String, loader: ClassLoader): Unit =
+  private def callJAnsi(methodName: String, loader: ClassLoader): Unit =
     if isWindows && !isCygwin then callJAnsiMethod(methodName, loader)
-  private[this] def callJAnsiMethod(methodName: String, loader: ClassLoader): Unit =
+  private def callJAnsiMethod(methodName: String, loader: ClassLoader): Unit =
     try {
       val c = Class.forName("org.fusesource.jansi.AnsiConsole", true, loader)
       c.getMethod(methodName).invoke(null)

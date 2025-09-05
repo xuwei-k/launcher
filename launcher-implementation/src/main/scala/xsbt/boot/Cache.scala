@@ -1,6 +1,8 @@
-/* sbt -- Simple Build Tool
- * Copyright 2009, 2010  Mark Harrah
+/*
+ * sbt
+ * Licensed under Apache License 2.0 (see LICENSE)
  */
+
 package xsbt.boot
 
 import java.lang.ref.{ Reference, SoftReference }

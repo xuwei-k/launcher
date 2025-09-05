@@ -1,3 +1,8 @@
+/*
+ * sbt
+ * Licensed under Apache License 2.0 (see LICENSE)
+ */
+
 package xsbti;
 
 /** The main entry point for a launched service.  This allows applciations

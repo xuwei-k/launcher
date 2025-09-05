@@ -1,4 +1,8 @@
-/** These are packaged and published locally and the resulting artifact is used to test the launcher. */
+/*
+ * sbt
+ * Licensed under Apache License 2.0 (see LICENSE)
+ */
+
 package xsbt.boot.test
 
 import scala.annotation.nowarn

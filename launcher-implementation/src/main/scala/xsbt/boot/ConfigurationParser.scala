@@ -291,10 +291,10 @@ class ConfigurationParser:
       lines.foldLeft(
         (ListMap.empty.default(x => ListMap.empty[String, Option[String]]), None): State
       ) {
-        case (x, Comment)            => x
-        case ((map, _), s: Section)  => (map, Some(s.name))
-        case ((_, None), l: Labeled) => Pre.error("label " + l.label + " is not in a section")
-        case ((map, s @ Some(section)), l: Labeled) =>
+        case (x, Line.Comment)            => x
+        case ((map, _), s: Line.Section)  => (map, Some(s.name))
+        case ((_, None), l: Line.Labeled) => Pre.error("label " + l.label + " is not in a section")
+        case ((map, s @ Some(section)), l: Line.Labeled) =>
           val sMap = map(section)
           if sMap.contains(l.label) then
             Pre.error("duplicate label '" + l.label + "' in section '" + section + "'")
@@ -302,10 +302,10 @@ class ConfigurationParser:
       }
     s._1
 
-sealed trait Line
-final class Labeled(val label: String, val value: Option[String]) extends Line
-final class Section(val name: String) extends Line
-object Comment extends Line
+enum Line:
+  case Labeled(val label: String, val value: Option[String])
+  case Section(val name: String)
+  case Comment
 
 class ParseException(val content: String, val line: Int, val col: Int, val msg: String)
     extends BootException(
@@ -330,7 +330,7 @@ object ParseLine:
         content.length - trimmedExtra.length,
         "expected end of line, found '" + extra + "'"
       )
-      new Section(trimmed.substring(1, closing).trim)
+      Line.Section(trimmed.substring(1, closing).trim)
     def labeled =
       trimmed.split(":", 2) match
         case Array(label, value) =>
@@ -339,14 +339,14 @@ object ParseLine:
             content.indexOf(':'),
             "value for '" + label + "' was empty"
           )
-          new Labeled(label, Some(trimmedValue))
-        case x => new Labeled(x.mkString, None)
+          Line.Labeled(label, Some(trimmedValue))
+        case x => Line.Labeled(x.mkString, None)
 
     if isEmpty(trimmed) then Nil
     else
       val processed =
         trimmed.charAt(0) match
-          case '#' => Comment
+          case '#' => Line.Comment
           case '[' => section
           case _   => labeled
       processed :: Nil

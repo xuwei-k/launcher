@@ -218,10 +218,10 @@ ThisBuild / developers := List(
   Developer("dwijnand", "Dale Wijnand", "@dwijnand", url("https://github.com/dwijnand"))
 )
 ThisBuild / publishTo := {
-  val nexus = "https://oss.sonatype.org/"
-  if (version.value.trim.endsWith("SNAPSHOT"))
-    Some("snapshots" at nexus + "content/repositories/snapshots")
-  else Some("releases" at nexus + "service/local/staging/deploy/maven2")
+  val centralSnapshots = "https://central.sonatype.com/repository/maven-snapshots/"
+  val v = (ThisBuild / version).value
+  if (v.endsWith("SNAPSHOT")) Some("central-snapshots" at centralSnapshots)
+  else localStaging.value
 }
 ThisBuild / headerLicense := Some(
   HeaderLicense.Custom(

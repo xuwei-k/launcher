@@ -84,12 +84,12 @@ class ConfigurationParser:
   def getClassifiers(m: LabelMap, label: String): (Value[List[String]], LabelMap) =
     process(m, "classifiers", processClassifiers(label))
   def processClassifiers(label: String)(value: Option[String]): Value[List[String]] =
-    value.map(readValue[List[String]](label)) getOrElse new Explicit(Nil)
+    value.map(readValue[List[String]](label)) getOrElse Value.Explicit(Nil)
 
   def getVersion(m: LabelMap, label: String, defaultName: String): (Value[String], LabelMap) =
     process(m, "version", processVersion(label, defaultName))
   def processVersion(label: String, defaultName: String)(value: Option[String]): Value[String] =
-    value.map(readValue[String](label)).getOrElse(new Implicit(defaultName, None))
+    value.map(readValue[String](label)).getOrElse(Value.Implicit(defaultName, None))
 
   def getName(
       m: LabelMap,
@@ -101,14 +101,14 @@ class ConfigurationParser:
   def processName(label: String, defaultName: String, defaultValue: String)(
       value: Option[String]
   ): Value[String] =
-    value.map(readValue[String](label)).getOrElse(new Implicit(defaultName, Some(defaultValue)))
+    value.map(readValue[String](label)).getOrElse(Value.Implicit(defaultName, Some(defaultValue)))
 
   def readValue[T](label: String)(implicit read: String => T): String => Value[T] = value0 =>
     val value = substituteVariables(value0)
     if isEmpty(value) then
       Pre.error(label + " cannot be empty (omit declaration to use the default)")
     try parsePropertyValue(label, value)(Value.readImplied[T])
-    catch case _: BootException => new Explicit(read(value))
+    catch case _: BootException => Value.Explicit(read(value))
 
   @nowarn
   def processSection[T](sections: SectionMap, name: String, f: LabelMap => T) =

@@ -130,8 +130,8 @@ object LaunchTest:
   def testApp(main: String, extra: Array[File]): Application =
     Application(
       "org.scala-sbt",
-      new Explicit("launch-test"),
-      new Explicit(AppVersion),
+      Value.Explicit("launch-test"),
+      Value.Explicit(AppVersion),
       main,
       Nil,
       CrossValue.Disabled,

@@ -28,7 +28,7 @@ final case class LaunchConfiguration(
 
   def withScalaVersion(newScalaVersion: String) =
     LaunchConfiguration(
-      new Explicit(newScalaVersion),
+      Value.Explicit(newScalaVersion),
       ivyConfiguration,
       app,
       boot,
@@ -50,7 +50,7 @@ final case class LaunchConfiguration(
     LaunchConfiguration(
       scalaVersion,
       ivyConfiguration,
-      app.withVersion(new Explicit(newAppVersion)),
+      app.withVersion(Value.Explicit(newAppVersion)),
       boot,
       logging,
       appProperties,
@@ -64,9 +64,9 @@ final case class LaunchConfiguration(
       classifiers0: Classifiers
   ) =
     LaunchConfiguration(
-      new Explicit(newScalaVersion),
+      Value.Explicit(newScalaVersion),
       ivyConfiguration.copy(classifiers = classifiers0),
-      app.withVersion(new Explicit(newAppVersion)).withName(new Explicit(newAppName)),
+      app.withVersion(Value.Explicit(newAppVersion)).withName(Value.Explicit(newAppName)),
       boot,
       logging,
       appProperties,
@@ -110,28 +110,34 @@ final case class IvyOptions(
 ):
   def map(f: File => File) =
     IvyOptions(ivyHome.map(f), classifiers, repositories, checksums, isOverrideRepositories)
-sealed trait Value[T] extends Serializable
-final class Explicit[T](val value: T) extends Value[T]:
-  override def toString = value.toString
-final class Implicit[T](val name: String, val default: Option[T]) extends Value[T]:
-  require(isNonEmpty(name), "name cannot be empty")
-  override def toString = name + (default match
-    case Some(d) => "[" + d + "]";
-    case None    => "")
+
+enum Value[A1]:
+  case Explicit(value: A1) extends Value[A1]
+  case Implicit(name: String, default: Option[A1]) extends Value[A1]
+  override def toString: String = this match
+    case Explicit(value)         => value.toString()
+    case Implicit(name, default) =>
+      name + (default match
+        case Some(d) => "[" + d + "]"
+        case None    => "")
+
 object Value:
-  def get[T](v: Value[T]): T = v match
-    case e: Explicit[T] => e.value;
-    case _              => throw new BootException("unresolved version: " + v)
-  def readImplied[T](s: String, name: String, default: Option[String])(implicit
-      read: String => T
-  ): Value[T] =
-    if s == "read" then new Implicit(name, default map read)
+  def get[A1](v: Value[A1]): A1 =
+    v match
+      case e: Explicit[A1] => e.value;
+      case _               => throw new BootException("unresolved version: " + v)
+  def readImplied[A1](s: String, name: String, default: Option[String])(using
+      read: String => A1
+  ): Value[A1] =
+    if s == "read" then Value.Implicit(name, default map read)
     else Pre.error("expected 'read', got '" + s + "'")
+end Value
 
 final case class Classifiers(forScala: Value[List[String]], app: Value[List[String]])
+
 object Classifiers:
   def apply(forScala: List[String], app: List[String]): Classifiers =
-    Classifiers(new Explicit(forScala), new Explicit(app))
+    Classifiers(Value.Explicit(forScala), Value.Explicit(app))
 
 object LaunchCrossVersion:
   def apply(s: String): xsbti.CrossValue =
@@ -176,8 +182,8 @@ object Application:
     import id.*
     Application(
       groupID,
-      new Explicit(name),
-      new Explicit(version),
+      Value.Explicit(name),
+      Value.Explicit(version),
       mainClass,
       mainComponents.toList,
       safeCrossVersionedValue(id),

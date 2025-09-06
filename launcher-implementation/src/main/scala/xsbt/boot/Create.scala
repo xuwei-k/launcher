@@ -8,8 +8,8 @@ package xsbt.boot
 import Pre.*
 import java.io.File
 import java.util.{ Locale, Properties }
-
 import scala.collection.immutable.List
+import PropertyInit.*
 
 object Initialize:
   lazy val selectCreate = (_: AppProperty).create

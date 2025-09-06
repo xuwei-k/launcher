@@ -28,11 +28,11 @@ final class ResolveValues(conf: LaunchConfiguration):
     // the added "" ensures that the main jars are retrieved
     val scalaClassifiers = "" :: resolve(classifiers.forScala)
     val appClassifiers = "" :: resolve(classifiers.app)
-    Classifiers(new Explicit(scalaClassifiers), new Explicit(appClassifiers))
+    Classifiers(Value.Explicit(scalaClassifiers), Value.Explicit(appClassifiers))
   def resolve[T](v: Value[T])(using read: String => T): T =
     v match
-      case e: Explicit[?] => e.value
-      case i: Implicit[?] =>
+      case e: Value.Explicit[?] => e.value
+      case i: Value.Implicit[?] =>
         trim(properties.getProperty(i.name))
           .map(read)
           .orElse(i.default)

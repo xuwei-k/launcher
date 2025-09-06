@@ -84,12 +84,12 @@ class ConfigurationParser:
   def getClassifiers(m: LabelMap, label: String): (Value[List[String]], LabelMap) =
     process(m, "classifiers", processClassifiers(label))
   def processClassifiers(label: String)(value: Option[String]): Value[List[String]] =
-    value.map(readValue[List[String]](label)) getOrElse new Explicit(Nil)
+    value.map(readValue[List[String]](label)) getOrElse Value.Explicit(Nil)
 
   def getVersion(m: LabelMap, label: String, defaultName: String): (Value[String], LabelMap) =
     process(m, "version", processVersion(label, defaultName))
   def processVersion(label: String, defaultName: String)(value: Option[String]): Value[String] =
-    value.map(readValue[String](label)).getOrElse(new Implicit(defaultName, None))
+    value.map(readValue[String](label)).getOrElse(Value.Implicit(defaultName, None))
 
   def getName(
       m: LabelMap,
@@ -101,14 +101,14 @@ class ConfigurationParser:
   def processName(label: String, defaultName: String, defaultValue: String)(
       value: Option[String]
   ): Value[String] =
-    value.map(readValue[String](label)).getOrElse(new Implicit(defaultName, Some(defaultValue)))
+    value.map(readValue[String](label)).getOrElse(Value.Implicit(defaultName, Some(defaultValue)))
 
   def readValue[T](label: String)(implicit read: String => T): String => Value[T] = value0 =>
     val value = substituteVariables(value0)
     if isEmpty(value) then
       Pre.error(label + " cannot be empty (omit declaration to use the default)")
     try parsePropertyValue(label, value)(Value.readImplied[T])
-    catch case _: BootException => new Explicit(read(value))
+    catch case _: BootException => Value.Explicit(read(value))
 
   @nowarn
   def processSection[T](sections: SectionMap, name: String, f: LabelMap => T) =
@@ -266,8 +266,8 @@ class ConfigurationParser:
       name: String
   )(action: String, requiredArg: String, optionalArg: Option[String]) =
     action match
-      case "prompt" => new PromptProperty(requiredArg, optionalArg)
-      case "set"    => new SetProperty(requiredArg)
+      case "prompt" => PropertyInit.PromptProperty(requiredArg, optionalArg)
+      case "set"    => PropertyInit.SetProperty(requiredArg)
       case _        => Pre.error("unknown action '" + action + "' for property '" + name + "'")
   private lazy val propertyPattern =
     Pattern.compile("""(.+)\((.*)\)(?:\[(.*)\])?""") // examples: prompt(Version)[1.0] or set(1.0)
@@ -291,10 +291,10 @@ class ConfigurationParser:
       lines.foldLeft(
         (ListMap.empty.default(x => ListMap.empty[String, Option[String]]), None): State
       ) {
-        case (x, Comment)            => x
-        case ((map, _), s: Section)  => (map, Some(s.name))
-        case ((_, None), l: Labeled) => Pre.error("label " + l.label + " is not in a section")
-        case ((map, s @ Some(section)), l: Labeled) =>
+        case (x, Line.Comment)            => x
+        case ((map, _), s: Line.Section)  => (map, Some(s.name))
+        case ((_, None), l: Line.Labeled) => Pre.error("label " + l.label + " is not in a section")
+        case ((map, s @ Some(section)), l: Line.Labeled) =>
           val sMap = map(section)
           if sMap.contains(l.label) then
             Pre.error("duplicate label '" + l.label + "' in section '" + section + "'")
@@ -302,10 +302,10 @@ class ConfigurationParser:
       }
     s._1
 
-sealed trait Line
-final class Labeled(val label: String, val value: Option[String]) extends Line
-final class Section(val name: String) extends Line
-object Comment extends Line
+enum Line:
+  case Labeled(val label: String, val value: Option[String])
+  case Section(val name: String)
+  case Comment
 
 class ParseException(val content: String, val line: Int, val col: Int, val msg: String)
     extends BootException(
@@ -330,7 +330,7 @@ object ParseLine:
         content.length - trimmedExtra.length,
         "expected end of line, found '" + extra + "'"
       )
-      new Section(trimmed.substring(1, closing).trim)
+      Line.Section(trimmed.substring(1, closing).trim)
     def labeled =
       trimmed.split(":", 2) match
         case Array(label, value) =>
@@ -339,14 +339,14 @@ object ParseLine:
             content.indexOf(':'),
             "value for '" + label + "' was empty"
           )
-          new Labeled(label, Some(trimmedValue))
-        case x => new Labeled(x.mkString, None)
+          Line.Labeled(label, Some(trimmedValue))
+        case x => Line.Labeled(x.mkString, None)
 
     if isEmpty(trimmed) then Nil
     else
       val processed =
         trimmed.charAt(0) match
-          case '#' => Comment
+          case '#' => Line.Comment
           case '[' => section
           case _   => labeled
       processed :: Nil

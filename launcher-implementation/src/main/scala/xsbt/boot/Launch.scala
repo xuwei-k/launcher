@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicReference
 import scala.collection.immutable.List
 import scala.annotation.{ nowarn, tailrec }
 import ConfigurationStorageState.*
+import UpdateTarget.*
 
 class LauncherArguments(val args: List[String], val isLocate: Boolean, val isExportRt: Boolean)
 

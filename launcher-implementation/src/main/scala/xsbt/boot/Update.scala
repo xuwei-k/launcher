@@ -7,12 +7,12 @@ package xsbt.boot
 
 import java.io.File
 
-sealed trait UpdateTarget:
-  def tpe: String; def classifiers: List[String]
-final class UpdateScala(val classifiers: List[String]) extends UpdateTarget:
-  def tpe = "scala"
-final class UpdateApp(val id: Application, val classifiers: List[String], val tpe: String)
-    extends UpdateTarget
+enum UpdateTarget:
+  case UpdateScala(classifiers: List[String])
+  case UpdateApp(id: Application, classifiers: List[String], override val tpe: String)
+  def tpe: String = this match
+    case UpdateScala(_)       => "scala"
+    case UpdateApp(_, _, tpe) => tpe
 
 final class UpdateConfiguration(
     val bootDirectory: File,

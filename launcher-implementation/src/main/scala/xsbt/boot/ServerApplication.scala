@@ -64,7 +64,7 @@ object ServerLocator:
       props.getProperty(SERVER_URI_PROPERTY) match
         case null => None
         case uri  => Some(new java.net.URI(uri))
-    catch case e: IOException => None
+    catch case _: IOException => None
   def writeProperties(f: File, uri: URI): Unit =
     val props = new java.util.Properties
     props.setProperty(SERVER_URI_PROPERTY, uri.toASCIIString)
@@ -79,7 +79,7 @@ object ServerLocator:
       val socket = new java.net.Socket(uri.getHost, uri.getPort)
       try socket.isConnected
       finally socket.close()
-    catch case e: IOException => false
+    catch case _: IOException => false
 
 /** A helper class that dumps incoming values into a print stream. */
 class StreamDumper(in: java.io.BufferedReader, out: java.io.PrintStream) extends Thread:
@@ -155,7 +155,7 @@ object ServerLauncher:
           // though this is not reliable)
           try process.destroy()
           catch
-            case e: Exception =>
+            case _: Exception =>
           // block a second to try to get stuff from stderr
           errorDumper.close(waitForErrors = true)
           sys.error(s"failed to start server process in ${pb.directory} command line ${pb.command}")
@@ -178,7 +178,7 @@ object ServerLauncher:
     def read(): Option[URI] = in.readLine match
       case null               => None
       case ServerUriLine(uri) => Some(uri)
-      case line               => read()
+      case _                  => read()
     try read()
     finally in.close()
 

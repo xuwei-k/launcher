@@ -9,21 +9,14 @@ import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository
 import coursier.params.ResolutionParams
 import java.io.{ File, FileWriter, PrintWriter }
-import java.nio.file.{ Files, StandardCopyOption, Paths }
+import java.nio.file.{ Files, StandardCopyOption }
 import java.util.Properties
 import java.util.regex.Pattern
 import BootConfiguration.*
 import scala.annotation.nowarn
 
 class CousierUpdate(config: UpdateConfiguration):
-  import config.{
-    bootDirectory,
-    getScalaVersion,
-    repositories,
-    resolutionCacheBase,
-    scalaVersion,
-    scalaOrg,
-  }
+  import config.{ bootDirectory, getScalaVersion, resolutionCacheBase, scalaVersion, scalaOrg }
 
   private def logFile = new File(bootDirectory, UpdateLogName)
   private val logWriter = new PrintWriter(new FileWriter(logFile))
@@ -62,9 +55,6 @@ class CousierUpdate(config: UpdateConfiguration):
       _.addCredentials(_)
     }
     cache
-  private lazy val coursierRepos: Seq[Repository] =
-    if repositories.isEmpty then Resolve.defaultRepositories
-    else Nil
 
   def apply(target: UpdateTarget, reason: String): UpdateResult =
     try update(target, reason)
@@ -195,7 +185,7 @@ class CousierUpdate(config: UpdateConfiguration):
       .run()
     val actualScalaVersion = detectScalaVersion(r.dependencySet.set)
     val retrieveDir = target match
-      case u: UpdateScala =>
+      case _: UpdateScala =>
         new File(new File(bootDirectory, baseDirectoryName(scalaOrg, scalaVersion)), "lib")
       case u: UpdateApp =>
         new File(
@@ -206,7 +196,7 @@ class CousierUpdate(config: UpdateConfiguration):
       case _: UpdateScala => true
       case _: UpdateApp   => false
     val depVersion: Option[String] = target match
-      case u: UpdateScala => scalaVersion
+      case _: UpdateScala => scalaVersion
       case u: UpdateApp   => Some(Value.get(u.id.version))
     if !retrieveDir.exists then Files.createDirectories(retrieveDir.toPath)
     val downloadedJars = Fetch()
@@ -324,6 +314,7 @@ class CousierUpdate(config: UpdateConfiguration):
     MavenRepository(root)
 
   /** Uses the pattern defined in BuildConfiguration to download sbt from Google code. */
+  @nowarn
   private def ivyRepository(
       id: String,
       base: String,
@@ -353,14 +344,6 @@ class CousierUpdate(config: UpdateConfiguration):
       )
       .toOption
       .get
-
-  private def pathToUriString(path: String): String =
-    val stopAtIdx = path.indexWhere(c => c == '[' || c == '$' || c == '(')
-    if stopAtIdx > 0 then
-      val (pathPart, patternPart) = path.splitAt(stopAtIdx)
-      Paths.get(pathPart).toUri.toASCIIString + patternPart
-    else if stopAtIdx == 0 then "file://" + path
-    else Paths.get(path).toUri.toASCIIString
 
   /** Logs the given message to a file and to the console. */
   private def log(msg: String) =

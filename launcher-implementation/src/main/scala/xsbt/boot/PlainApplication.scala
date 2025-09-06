@@ -37,6 +37,6 @@ object PlainApplication:
         clazz.getMethod("main", classOf[Array[String]])
       if java.lang.reflect.Modifier.isStatic(method.getModifiers) then Some(method)
       else None
-    catch case n: NoSuchMethodException => None
+    catch case _: NoSuchMethodException => None
 
   case class Exit(code: Int) extends xsbti.Exit

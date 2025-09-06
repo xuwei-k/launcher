@@ -8,7 +8,7 @@ import java.io.{ File, InputStreamReader }
 import java.net.{ MalformedURLException, URI, URL }
 import java.util.regex.Pattern
 import scala.collection.immutable.List
-import annotation.tailrec
+import scala.annotation.{ nowarn, tailrec }
 
 object ConfigurationStorageState extends Enumeration:
   val PropertiesFile = value("properties-file")
@@ -17,6 +17,8 @@ object ConfigurationStorageState extends Enumeration:
 object Configuration:
   import ConfigurationStorageState.*
   final val SysPropPrefix = "-D"
+
+  @nowarn
   def parse(file: URL, baseDirectory: File) =
     Using(new InputStreamReader(file.openStream, "utf8"))((new ConfigurationParser).apply)
 

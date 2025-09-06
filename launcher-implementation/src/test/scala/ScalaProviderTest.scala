@@ -101,7 +101,6 @@ object ScalaProviderTest extends verify.BasicTestSuite:
     withLauncher(checkLauncher(version, mapScalaVersion(version)))
 
   private def checkLauncher(version: String, versionValue: String)(launcher: xsbti.Launcher) =
-    import scala.languageFeature.reflectiveCalls
     import scala.reflect.Selectable.reflectiveSelectable
     val provider = launcher.getScala(version)
     val loader = provider.loader

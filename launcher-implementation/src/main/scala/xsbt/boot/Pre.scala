@@ -68,7 +68,7 @@ object Pre:
     def classMissing(c: String) =
       try
         Class.forName(c, false, loader); false
-      catch case e: ClassNotFoundException => true
+      catch case _: ClassNotFoundException => true
     classes.toList.filter(classMissing)
   def toURLs(files: Array[File]): Array[URL] = files.map(_.toURI.toURL)
   def toFile(url: URL): File =

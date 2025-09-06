@@ -85,7 +85,7 @@ object Launch:
 
   /** Parses the configuration *and* runs the initialization code that will remove variable references. */
   def parseAndInitializeConfig(configLocation: URL, currentDirectory: File): LaunchConfiguration =
-    val (parsed, bd) = parseConfiguration(configLocation, currentDirectory)
+    val (parsed, _) = parseConfiguration(configLocation, currentDirectory)
     resolveConfig(parsed)
 
   /** Parse configuration and return it and the baseDirectory of the launch. */
@@ -138,7 +138,7 @@ object Launch:
   )(config: RunConfiguration): Option[Int] =
     run(config) match
       case e: xsbti.Exit     => Some(e.code)
-      case c: xsbti.Continue => None
+      case _: xsbti.Continue => None
       case r: xsbti.Reboot   =>
         launch(run)(
           new RunConfiguration(Option(r.scalaVersion), r.app, r.baseDirectory, r.arguments.toList)
@@ -235,7 +235,7 @@ class Launch private[xsbt] (
     val existingLoader =
       if jansiHome.exists then
         try Some(makeLoader())
-        catch case e: Exception => None
+        catch case _: Exception => None
       else None
     existingLoader.getOrElse {
       update(module, "")
@@ -373,7 +373,7 @@ class Launch private[xsbt] (
       classLoader: ClassLoader
   ) =
     val scalaM = scalaModule(scalaOrg, scalaVersion)
-    val (scalaHome, lib) = scalaDirs(scalaM, scalaOrg, scalaVersion)
+    val (_, lib) = scalaDirs(scalaM, scalaOrg, scalaVersion)
     val baseDirs = lib :: Nil
     def testLoadScalaClasses =
       if scalaVersion.startsWith("2.") then TestLoadScala2Classes
@@ -383,7 +383,7 @@ class Launch private[xsbt] (
       checkLoader(p.loader, retrieved.definition, testLoadScalaClasses, p)
     existing(scalaM, scalaOrg, Some(scalaVersion), _ => baseDirs) flatMap { mod =>
       try Some(provider(mod))
-      catch case e: Exception => None
+      catch case _: Exception => None
     } getOrElse {
       val (_, scalaVersion) = update(scalaM, reason)
       provider(new RetrievedModule(true, scalaM, scalaVersion, baseDirs))
@@ -415,6 +415,7 @@ class Launch private[xsbt] (
   def appDirectory(base: File, id: xsbti.ApplicationID): File =
     new File(base, appDirectoryName(id, File.separator))
 
+  @nowarn
   def scalaDirs(module: ModuleDefinition, scalaOrg: String, scalaVersion: String): (File, File) =
     val scalaHome = new File(bootDirectory, baseDirectoryName(scalaOrg, Some(scalaVersion)))
     val libDirectory = new File(scalaHome, ScalaDirectoryName)
@@ -540,6 +541,7 @@ object Launcher:
 // Do not change this without testing sbt 1.3.13
 // https://github.com/sbt/sbt/blob/v1.3.13/main/src/main/scala/sbt/internal/XMainConfiguration.scala#L32-L33
 // https://github.com/sbt/sbt/issues/6405
+@nowarn
 private[boot] class TestInterfaceLoader(jar: File, parent: ClassLoader, topLoader: ClassLoader)
     extends URLClassLoader(Array(jar.toURI.toURL), topLoader)
 

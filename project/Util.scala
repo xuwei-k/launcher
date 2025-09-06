@@ -35,6 +35,7 @@ object Util {
         "-language:higherKinds",
         "-language:existentials",
         "-Werror",
+        "-Wunused:all",
       )
     },
   )

@@ -37,7 +37,7 @@ object LocksTest extends Properties("Locks"):
   property("Contested single lock") = spec {
     withTemporaryDirectory { dir =>
       val lockFile = new File(dir, "lock")
-      forkFold(2000) { i =>
+      forkFold(2000) { _ =>
         Locks(lockFile, callTrue)
       }
     }

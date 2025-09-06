@@ -26,7 +26,7 @@ class EchoServer extends xsbti.ServerMain:
                   echoTo(clientSocket)
               clientSocketThread.start()
             catch
-              case e: SocketTimeoutException => // Ignore
+              case _: SocketTimeoutException => // Ignore
         // Simple mechanism to dump input to output.
         private def echoTo(socket: Socket): Unit =
           val input =

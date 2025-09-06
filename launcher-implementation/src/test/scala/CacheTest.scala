@@ -9,7 +9,7 @@ object CacheTest extends Properties("Cache"):
       Gen.oneOf(Seq(identity[Int](_), (i: Int) => -i, (i: Int) => i / 2, (i: Int) => i + 1))
     }
 
-  property("Cache") = Prop.forAll { (key: Int, keys: List[Int], map: Int => Int) =>
+  property("Cache") = Prop.forAll { (_: Int, keys: List[Int], map: Int => Int) =>
     val cache = new Cache((i: Int, _: Unit) => map(i))
     def toProperty(key: Int) =
       ("Key " + key) |: ("Value: " + map(key)) |: (cache.apply(key, ()) == map(key))

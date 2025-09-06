@@ -134,9 +134,9 @@ object Classifiers:
 object LaunchCrossVersion:
   def apply(s: String): xsbti.CrossValue =
     s match
-      case x if CrossVersionUtil.isFull(s)     => xsbti.CrossValue.Full
-      case x if CrossVersionUtil.isBinary(s)   => xsbti.CrossValue.Binary
-      case x if CrossVersionUtil.isDisabled(s) => xsbti.CrossValue.Disabled
+      case _ if CrossVersionUtil.isFull(s)     => xsbti.CrossValue.Full
+      case _ if CrossVersionUtil.isBinary(s)   => xsbti.CrossValue.Binary
+      case _ if CrossVersionUtil.isDisabled(s) => xsbti.CrossValue.Disabled
       case x => Pre.error("unknown value '" + x + "' for property 'cross-versioned'")
 
 final case class Application(

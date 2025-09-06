@@ -10,6 +10,7 @@ import java.net.{ MalformedURLException, URL }
 import java.util.regex.{ Matcher, Pattern }
 import Matcher.quoteReplacement
 import scala.collection.immutable.List
+import scala.annotation.nowarn
 
 object ConfigurationParser:
   def trim(s: Array[String]) = s.map(_.trim).toList
@@ -105,9 +106,12 @@ class ConfigurationParser:
     if isEmpty(value) then
       Pre.error(label + " cannot be empty (omit declaration to use the default)")
     try parsePropertyValue(label, value)(Value.readImplied[T])
-    catch case e: BootException => new Explicit(read(value))
+    catch case _: BootException => new Explicit(read(value))
+
+  @nowarn
   def processSection[T](sections: SectionMap, name: String, f: LabelMap => T) =
     process[String, LabelMap, T](sections, name, m => f(m.default(x => None)))
+
   def process[K, V, T](sections: ListMap[K, V], name: K, f: V => T): (T, ListMap[K, V]) =
     (f(sections(name)), sections - name)
   def check(map: ListMap[String, ?], label: String): Unit =
@@ -184,7 +188,7 @@ class ConfigurationParser:
     val (lock, m1) = optfile(m, "lock")
     // TODO - JVM args
     val (args, m2) = optfile(m1, "jvmargs")
-    val (props, m3) = optfile(m2, "jvmprops")
+    val (props, _) = optfile(m2, "jvmprops")
     lock map { file =>
       ServerConfiguration(file, args, props)
     }
@@ -240,7 +244,7 @@ class ConfigurationParser:
               skipConsistencyCheck = cc,
               allowInsecureProtocol = ip
             )
-          case (Nil, (true, false, false, cc, ip)) =>
+          case (Nil, (true, false, false, _, ip)) =>
             Maven(key, url, bootOnly = true, allowInsecureProtocol = ip)
           case (Nil, (false, false, false, false, ip)) =>
             Maven(key, url, allowInsecureProtocol = ip)
@@ -277,6 +281,8 @@ class ConfigurationParser:
   type LabelMap = ListMap[String, Option[String]]
   // section-name -> label -> value
   type SectionMap = ListMap[String, LabelMap]
+
+  @nowarn
   def processLines(lines: List[Line]): SectionMap =
     type State = (SectionMap, Option[String])
     val s: State =

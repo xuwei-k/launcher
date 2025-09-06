@@ -8,6 +8,7 @@ package xsbt.boot
 import Pre.*
 import java.io.File
 import java.net.URLClassLoader
+import UpdateTarget.*
 
 final class ModuleDefinition(
     val configuration: UpdateConfiguration,

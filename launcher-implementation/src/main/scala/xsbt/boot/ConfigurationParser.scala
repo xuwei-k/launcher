@@ -266,8 +266,8 @@ class ConfigurationParser:
       name: String
   )(action: String, requiredArg: String, optionalArg: Option[String]) =
     action match
-      case "prompt" => new PromptProperty(requiredArg, optionalArg)
-      case "set"    => new SetProperty(requiredArg)
+      case "prompt" => PropertyInit.PromptProperty(requiredArg, optionalArg)
+      case "set"    => PropertyInit.SetProperty(requiredArg)
       case _        => Pre.error("unknown action '" + action + "' for property '" + name + "'")
   private lazy val propertyPattern =
     Pattern.compile("""(.+)\((.*)\)(?:\[(.*)\])?""") // examples: prompt(Version)[1.0] or set(1.0)

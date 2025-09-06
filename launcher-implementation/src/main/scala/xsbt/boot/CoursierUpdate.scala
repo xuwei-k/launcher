@@ -18,6 +18,7 @@ import java.nio.file.{ Files, StandardCopyOption }
 import java.util.Properties
 import java.util.regex.Pattern
 import BootConfiguration.*
+import UpdateTarget.*
 import scala.annotation.nowarn
 
 class CousierUpdate(config: UpdateConfiguration):

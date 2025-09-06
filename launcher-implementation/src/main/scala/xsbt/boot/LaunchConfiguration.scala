@@ -262,9 +262,9 @@ final case class AppProperty(name: String)(
     val fill: Option[PropertyInit]
 )
 
-sealed trait PropertyInit
-final class SetProperty(val value: String) extends PropertyInit
-final class PromptProperty(val label: String, val default: Option[String]) extends PropertyInit
+enum PropertyInit:
+  case SetProperty(val value: String)
+  case PromptProperty(val label: String, val default: Option[String])
 
 final class Logging(level: LogLevel.Value) extends Serializable:
   def log(s: => String, at: LogLevel.Value) =

@@ -1,3 +1,8 @@
+/*
+ * sbt
+ * Licensed under Apache License 2.0 (see LICENSE)
+ */
+
 package xsbt.boot
 
 import Pre.*

@@ -7,5 +7,6 @@ addSbtPlugin("com.github.sbt" % "sbt-proguard" % "0.5.0")
 addSbtPlugin("com.eed3si9n" % "sbt-nocomma" % "0.1.2")
 addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.5.5")
 addSbtPlugin("io.get-coursier" % "sbt-shading" % "2.1.5")
+addSbtPlugin("de.heikoseeberger" % "sbt-header" % "5.10.0")
 
 scalacOptions += "-feature"

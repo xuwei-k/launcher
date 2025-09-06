@@ -1,3 +1,8 @@
+/*
+ * sbt
+ * Licensed under Apache License 2.0 (see LICENSE)
+ */
+
 package xsbti;
 
 /** A launched application returns an instance of this class in order to communicate to the launcher

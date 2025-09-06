@@ -58,6 +58,7 @@ lazy val root = (project in file("."))
         "com.github.luben.zstd",
       ).map(ShadingRule.moveUnder(_, "xsbt.boot.internal.shaded"))
     }
+    headerLicense := (ThisBuild / headerLicense).value
   })
 
 // the launcher is published with metadata so that the scripted plugin can pull it in
@@ -99,6 +100,7 @@ lazy val launchInterfaceSub = (project in file("launcher-interface"))
       exclude[ReversedMissingMethodProblem]("xsbti.IvyRepository.allowInsecureProtocol")
     )
     exportJars := true
+    headerLicense := (ThisBuild / headerLicense).value
   })
   .settings(Release.settings)
 
@@ -149,6 +151,7 @@ lazy val launchSub = (project in file("launcher-implementation"))
     }
     Proguard / proguardOptions += ProguardOptions.keepMain("xsbt.boot.Boot")
     mimaPreviousArtifacts := Set.empty
+    headerLicense := (ThisBuild / headerLicense).value
   })
 
 def generalFilter =
@@ -194,6 +197,7 @@ lazy val testSamples = (project in file("test-sample"))
     mimaFailOnNoPrevious := false
     publish := { () }
     publishSigned := { () }
+    headerLicense := (ThisBuild / headerLicense).value
   })
 
 ThisBuild / organization := "org.scala-sbt"
@@ -219,3 +223,10 @@ ThisBuild / publishTo := {
     Some("snapshots" at nexus + "content/repositories/snapshots")
   else Some("releases" at nexus + "service/local/staging/deploy/maven2")
 }
+ThisBuild / headerLicense := Some(
+  HeaderLicense.Custom(
+    """|sbt
+     |Licensed under Apache License 2.0 (see LICENSE)
+     |""".stripMargin
+  )
+)

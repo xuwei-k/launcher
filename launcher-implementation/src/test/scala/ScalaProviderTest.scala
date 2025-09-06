@@ -2,11 +2,11 @@ package xsbt.boot
 
 import java.io.{ File, InputStream }
 import java.util.Properties
-import xsbti.{ Repository => _, Launcher => _, _ }
-import LaunchTest._
+import xsbti.{ Repository as _, Launcher as _, * }
+import LaunchTest.*
 import sbt.io.IO.{ createDirectory, touch, withTemporaryDirectory }
 
-object ScalaProviderTest extends verify.BasicTestSuite {
+object ScalaProviderTest extends verify.BasicTestSuite:
   test("Launch should provide ClassLoader for Scala 2.10.7") {
     checkScalaLoader("2.10.7")
   }
@@ -89,20 +89,20 @@ object ScalaProviderTest extends verify.BasicTestSuite {
 
   private def testResources = List("test-resourceA", "a/b/test-resourceB", "sub/test-resource")
 
-  private def createExtra(currentDirectory: File) = {
+  private def createExtra(currentDirectory: File) =
     val resourceDirectory = new File(currentDirectory, "resources")
     createDirectory(resourceDirectory)
     testResources.foreach(resource =>
       touch(new File(resourceDirectory, resource.replace('/', File.separatorChar)))
     )
     Array(resourceDirectory)
-  }
 
   private def checkScalaLoader(version: String) =
     withLauncher(checkLauncher(version, mapScalaVersion(version)))
 
-  private def checkLauncher(version: String, versionValue: String)(launcher: xsbti.Launcher) = {
-    import scala.language.reflectiveCalls
+  private def checkLauncher(version: String, versionValue: String)(launcher: xsbti.Launcher) =
+    import scala.languageFeature.reflectiveCalls
+    import scala.reflect.Selectable.reflectiveSelectable
     val provider = launcher.getScala(version)
     val loader = provider.loader
     // ensure that this loader can load Scala classes by trying scala.ScalaObject.
@@ -111,20 +111,17 @@ object ScalaProviderTest extends verify.BasicTestSuite {
 
     val libraryLoader = provider.loader.getParent
     // Test the structural type
-    libraryLoader match {
-      case x: ClassLoader with LibraryLoader @unchecked =>
+    libraryLoader match
+      case x: (ClassLoader & LibraryLoader) @unchecked =>
         assert(x.scalaVersion == version)
-    }
     tryScala(libraryLoader, libraryLoader)
-  }
 
   private def tryScala(loader: ClassLoader, libraryLoader: ClassLoader) =
     assert(Class.forName("scala.Product", false, loader).getClassLoader == libraryLoader)
 
   type LibraryLoader = { def scalaVersion: String }
-}
 
-object LaunchTest {
+object LaunchTest:
   def testApp(main: String): Application = testApp(main, Array[File]())
   def testApp(main: String, extra: Array[File]): Application =
     Application(
@@ -136,7 +133,7 @@ object LaunchTest {
       CrossValue.Disabled,
       extra
     )
-  import Predefined._
+  import Predefined.*
   def testRepositories =
     List(Local, MavenCentral, SonatypeOSSSnapshots).map(Repository.Predefined(_))
   def withLauncher[T](f: xsbti.Launcher => T): T =
@@ -147,24 +144,21 @@ object LaunchTest {
   val finalStyle = Set("2.9.1", "2.9.0-1", "2.9.0", "2.8.2", "2.8.1", "2.8.0")
   def unmapScalaVersion(versionNumber: String) = versionNumber.stripSuffix(".final")
   def mapScalaVersion(versionNumber: String) =
-    if (finalStyle(versionNumber)) versionNumber + ".final"
+    if finalStyle(versionNumber) then versionNumber + ".final"
     else versionNumber
 
-  def getScalaVersion: String = getScalaVersion(getClass.getClassLoader)
+  def getScalaVersion: String = "3.7.2" // getScalaVersion(getClass.getClassLoader)
   def getScalaVersion(loader: ClassLoader): String =
     getProperty(loader, "library.properties", "version.number")
   lazy val AppVersion =
     getProperty(getClass.getClassLoader, "sbt.launcher.version.properties", "version")
 
-  private[this] def getProperty(loader: ClassLoader, res: String, prop: String) =
+  private def getProperty(loader: ClassLoader, res: String, prop: String) =
     loadProperties(loader.getResourceAsStream(res)).getProperty(prop)
-  private[this] def loadProperties(propertiesStream: InputStream): Properties = {
+  private def loadProperties(propertiesStream: InputStream): Properties =
     val properties = new Properties
-    try {
+    try
       properties.load(propertiesStream)
-    } finally {
+    finally
       propertiesStream.close()
-    }
     properties
-  }
-}

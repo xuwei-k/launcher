@@ -3,52 +3,39 @@ package xsbt.boot.test
 
 class Exit(val code: Int) extends xsbti.Exit
 final class MainException(message: String) extends RuntimeException(message)
-final class ArgumentTest extends xsbti.AppMain {
+final class ArgumentTest extends xsbti.AppMain:
   def run(configuration: xsbti.AppConfiguration) =
-    if (configuration.arguments.length == 0)
-      throw new MainException("Arguments were empty")
-    else
-      new Exit(0)
-}
-class AppVersionTest extends xsbti.AppMain {
-  def run(configuration: xsbti.AppConfiguration) = {
+    if configuration.arguments.length == 0 then throw new MainException("Arguments were empty")
+    else new Exit(0)
+class AppVersionTest extends xsbti.AppMain:
+  def run(configuration: xsbti.AppConfiguration) =
     val expected = configuration.arguments.headOption.getOrElse("")
-    if (configuration.provider.id.version == expected)
-      new Exit(0)
+    if configuration.provider.id.version == expected then new Exit(0)
     else
       throw new MainException(
         "app version was " + configuration.provider.id.version + ", expected: " + expected
       )
-  }
-}
-class ExtraTest extends xsbti.AppMain {
-  def run(configuration: xsbti.AppConfiguration): xsbti.Exit = {
+class ExtraTest extends xsbti.AppMain:
+  def run(configuration: xsbti.AppConfiguration): xsbti.Exit =
     configuration.arguments.foreach { arg =>
-      if (getClass.getClassLoader.getResource(arg) eq null)
+      if getClass.getClassLoader.getResource(arg) eq null then
         throw new MainException("Could not find '" + arg + "'")
     }
     new Exit(0)
-  }
-}
-class PriorityTest extends xsbti.AppMain {
+class PriorityTest extends xsbti.AppMain:
   def run(configuration: xsbti.AppConfiguration): xsbti.Exit =
     PriorityTest.run(configuration)
-}
-object PriorityTest {
+object PriorityTest:
   def run(configuration: xsbti.AppConfiguration) =
     new Exit(0)
   def main(args: Array[String]): Unit =
     throw new MainException("This should not be called")
-}
-object PlainArgumentTestWithReturn {
-  def main(args: Array[String]): Unit = {
-    if (args.length == 0) 1
+object PlainArgumentTestWithReturn:
+  def main(args: Array[String]): Unit =
+    if args.length == 0 then 1
     else 0
     ()
-  }
-}
-object PlainArgumentTest {
+object PlainArgumentTest:
   def main(args: Array[String]): Unit =
-    if (args.length == 0) throw new MainException("Arguments were empty")
+    if args.length == 0 then throw new MainException("Arguments were empty")
     else ()
-}

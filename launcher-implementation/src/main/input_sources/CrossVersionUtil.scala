@@ -57,9 +57,9 @@ object CrossVersionUtil
 	def binaryScalaVersion(full: String): String = binaryVersionWithApi(full, TransitionScalaVersion)(scalaApiVersion)
 	def binarySbtVersion(full: String): String = binaryVersionWithApi(full, TransitionSbtVersion)(sbtApiVersion)
 	private[${{cross.package0}}] def binaryVersion(full: String, cutoff: String): String = binaryVersionWithApi(full, cutoff)(scalaApiVersion)
-	private[this] def isNewer(major: Int, minor: Int, minMajor: Int, minMinor: Int): Boolean =
+	private def isNewer(major: Int, minor: Int, minMajor: Int, minMinor: Int): Boolean =
 		major > minMajor || (major == minMajor && minor >= minMinor)
-	private[this] def binaryVersionWithApi(full: String, cutoff: String)(apiVersion: String => Option[(Int,Int)]): String =
+	private def binaryVersionWithApi(full: String, cutoff: String)(apiVersion: String => Option[(Int,Int)]): String =
 	{
 		def sub(major: Int, minor: Int) = major.toString() + "." + minor
 		(apiVersion(full), partialVersion(cutoff)) match {

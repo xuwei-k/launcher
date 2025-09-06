@@ -12,7 +12,7 @@ import java.io.File
 //
 // see also ProjectProperties for the set of constants that apply to the build.properties file in a project
 // The scala organization is used as a prefix in baseDirectoryName when a non-standard organization is used.
-private[boot] object BootConfiguration {
+private[boot] object BootConfiguration:
   // these are the Scala module identifiers to resolve/retrieve
   val ScalaOrg = "org.scala-lang"
   val CompilerModuleName = "scala-compiler"
@@ -77,11 +77,10 @@ private[boot] object BootConfiguration {
   val scalaRetrievePattern = ScalaDirectoryName + "/[artifact](-[classifier]).[ext]"
 
   def artifactType(classifier: String) =
-    classifier match {
+    classifier match
       case "sources" => "src"
       case "javadoc" => "doc"
       case _         => "jar"
-    }
 
   /**
    * The Ivy pattern to use for retrieving the application and its dependencies.  It is relative to the directory
@@ -97,19 +96,15 @@ private[boot] object BootConfiguration {
     appID.groupID + sep + appID.name + sep + appID.version
 
   /** The name of the directory in the boot directory to put all jars for the given version of scala in. */
-  def baseDirectoryName(scalaOrg: String, scalaVersion: Option[String]) = scalaVersion match {
+  def baseDirectoryName(scalaOrg: String, scalaVersion: Option[String]) = scalaVersion match
     case None     => "other"
-    case Some(sv) => (if (scalaOrg == ScalaOrg) "" else scalaOrg + ".") + ScalaVersionPrefix + sv
-  }
+    case Some(sv) => (if scalaOrg == ScalaOrg then "" else scalaOrg + ".") + ScalaVersionPrefix + sv
 
-  def extractScalaVersion(dir: File): Option[String] = {
+  def extractScalaVersion(dir: File): Option[String] =
     val name = dir.getName
-    if (name.contains(ScalaVersionPrefix))
+    if name.contains(ScalaVersionPrefix) then
       Some(name.substring(name.lastIndexOf(ScalaVersionPrefix) + ScalaVersionPrefix.length))
-    else
-      None
-  }
-}
+    else None
 
 private[boot] final class ProxyProperties(
     val envURL: String,
@@ -121,7 +116,7 @@ private[boot] final class ProxyProperties(
     val sysPassword: String
 )
 
-private[boot] object ProxyProperties {
+private[boot] object ProxyProperties:
   val http = apply("http")
   val https = apply("https")
   val ftp = apply("ftp")
@@ -135,4 +130,3 @@ private[boot] object ProxyProperties {
     pre + ".proxyUser",
     pre + ".proxyPassword"
   )
-}

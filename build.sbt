@@ -14,7 +14,7 @@ ThisBuild / version := {
   else orig
 }
 ThisBuild / description := "Standalone launcher for maven/ivy deployed projects"
-ThisBuild / scalaVersion := "2.13.16"
+ThisBuild / scalaVersion := "3.7.2"
 ThisBuild / publishMavenStyle := true
 ThisBuild / crossPaths := false
 ThisBuild / resolvers += Resolver.typesafeIvyRepo("releases")
@@ -42,7 +42,20 @@ lazy val root = (project in file("."))
     shadingRules ++= {
       Seq(
         "coursier",
-        "concurrentrefhashmap"
+        "concurrentrefhashmap",
+        "dependency",
+        "org.fusesource",
+        "macrocompat",
+        "io.github.alexarchambault.windowsansi",
+        "com.google.common",
+        "org.apache.commons",
+        "org.apache.xbean",
+        "org.codehaus",
+        "org.iq80",
+        "org.tukaani",
+        "com.github.plokhotnyuk.jsoniter_scala",
+        "scala.cli",
+        "com.github.luben.zstd",
       ).map(ShadingRule.moveUnder(_, "xsbt.boot.internal.shaded"))
     }
   })
@@ -116,22 +129,22 @@ lazy val launchSub = (project in file("launcher-implementation"))
     }
     Proguard / proguardOptions ++= Seq(
       "-keep,allowshrinking class * { *; }", // no obfuscation
-      "-keepattributes SourceFile,LineNumberTable", // preserve debugging information
+      "-keepattributes SourceFile,LineNumberTable,Signature,InnerClasses,EnclosingMethod", // preserve debugging information
       "-dontobfuscate",
       "-dontnote",
       "-dontwarn org.apache.ivy.**",
       "-dontwarn scala.runtime.Statics",
       "-ignorewarnings"
     )
-
     keepFullClasses := "xsbti.**" :: Nil
-    Proguard / proguard / javaOptions := Seq("-Xmx1G")
+    Proguard / proguard / javaOptions := Seq("-Xmx2G")
     Proguard / proguardOptions ++= keepFullClasses.value map ("-keep public class " + _ + " {\n\tpublic protected * ;\n}")
     Proguard / proguardInputFilter := { file =>
       file.name match {
         case x if x.startsWith("scala-library")           => Some(libraryFilter)
         case x if x.startsWith("ivy-2.3.0")               => Some(ivyFilter)
         case x if x.startsWith("launcher-implementation") => None
+        case x if x.startsWith("jsoniter-scala-core")     => None
         case _                                            => Some(generalFilter)
       }
     }
@@ -139,14 +152,20 @@ lazy val launchSub = (project in file("launcher-implementation"))
     mimaPreviousArtifacts := Set.empty
   })
 
-def generalFilter = "!META-INF/**,!*.properties"
-
-def libraryFilter =
+def generalFilter =
   List(
     "!META-INF/**",
     "!*.properties",
+    "!**/*.tasty"
+  ).mkString(",")
+
+def libraryFilter =
+  List(
+    "**/*.class",
+    "!META-INF/**",
+    "!*.properties",
     "!scala/util/parsing/**",
-    "**.class"
+    "!rootdoc.txt"
   ).mkString(",")
 
 def ivyFilter = {

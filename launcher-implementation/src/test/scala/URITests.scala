@@ -1,12 +1,12 @@
 package xsbt.boot
 
-import org.scalacheck._
-import Prop._
-import Configuration._
+import org.scalacheck.*
+import Prop.*
+import Configuration.*
 import java.io.File
 import java.net.URI
 
-object URITests extends Properties("URI Tests") {
+object URITests extends Properties("URI Tests"):
   // Need a platform-specific root, otherwise URI will not be absolute (e.g. if we use a "/a/b/c" path in Windows)
   // Note:
   // If I use "C:" instead of "/C:", then isAbsolute == true for the resulting URI, but resolve is broken:
@@ -14,7 +14,7 @@ object URITests extends Properties("URI Tests") {
   //      res0: java.net.URI = a
   //      scala> new URI("file", "/c:/a/b'/has spaces", null).resolve("a")                 working
   //      res1: java.net.URI = file:/c:/a/b'/a
-  val Root = if (xsbt.boot.Pre.isWindows) "/C:/" else "/"
+  val Root = if xsbt.boot.Pre.isWindows then "/C:/" else "/"
 
   val FileProtocol = "file"
   property("directoryURI adds trailing slash") = secure {
@@ -63,5 +63,3 @@ object URITests extends Properties("URI Tests") {
       (fpURI.getPath == decoded) &&
       (fpURI.getRawPath == encoded)
   }
-
-}

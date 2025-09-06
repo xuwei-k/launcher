@@ -1,6 +1,6 @@
 package xsbt.boot
 
-import Pre._
+import Pre.*
 import java.io.File
 import java.net.URLClassLoader
 
@@ -9,17 +9,15 @@ final class ModuleDefinition(
     val extraClasspath: Array[File],
     val target: UpdateTarget,
     val failLabel: String
-) {
+):
   def retrieveFailed: Nothing = fail("")
   def retrieveCorrupt(missing: Iterable[String]): Nothing =
     fail(": missing " + missing.mkString(", "))
   private def fail(extra: String) =
     throw new xsbti.RetrieveException(versionString, "could not retrieve " + failLabel + extra)
-  private def versionString: String = target match {
+  private def versionString: String = target match
     case _: UpdateScala => configuration.getScalaVersion;
     case a: UpdateApp   => Value.get(a.id.version)
-  }
-}
 
 final class RetrievedModule(
     val fresh: Boolean,
@@ -27,7 +25,7 @@ final class RetrievedModule(
     val detectedScalaVersion: Option[String],
     val resolvedAppVersion: Option[String],
     val baseDirectories: List[File]
-) {
+):
 
   /** Use this constructor only when the module exists already, or when its version is not dynamic (so its resolved version would be the same) */
   def this(
@@ -46,4 +44,3 @@ final class RetrievedModule(
 
   def createLoader(parentLoader: ClassLoader): ClassLoader =
     new URLClassLoader(toURLs(fullClasspath), parentLoader)
-}

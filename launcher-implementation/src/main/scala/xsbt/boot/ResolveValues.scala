@@ -29,8 +29,8 @@ final class ResolveValues(conf: LaunchConfiguration):
     Classifiers(new Explicit(scalaClassifiers), new Explicit(appClassifiers))
   def resolve[T](v: Value[T])(using read: String => T): T =
     v match
-      case e: Explicit[t] => e.value
-      case i: Implicit[t] =>
+      case e: Explicit[?] => e.value
+      case i: Implicit[?] =>
         trim(properties.getProperty(i.name))
           .map(read)
           .orElse(i.default)

@@ -14,7 +14,7 @@ object JAnsi:
       c.getMethod(methodName).invoke(null)
       ()
     catch
-      case ignore: ClassNotFoundException =>
+      case _: ClassNotFoundException =>
       /* The below code intentionally traps everything. It technically shouldn't trap the
        * non-StackOverflowError VirtualMachineErrors and AWTError would be weird, but this is PermGen
        * mitigation code that should not render sbt completely unusable if jansi initialization fails.

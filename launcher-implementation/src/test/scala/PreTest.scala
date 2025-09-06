@@ -49,7 +49,7 @@ object PreTest extends Properties("Pre"):
 
   def trap[T](t: => T): Option[T] =
     try Some(t)
-    catch case e: Exception => None
+    catch case _: Exception => None
 
   private def objArrEquals[T <: AnyRef](a: Array[T], b: Array[T]): Boolean =
     arrEquals(a.asInstanceOf[Array[AnyRef]], b.asInstanceOf[Array[AnyRef]])

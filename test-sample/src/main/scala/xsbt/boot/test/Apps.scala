@@ -1,6 +1,8 @@
 /** These are packaged and published locally and the resulting artifact is used to test the launcher. */
 package xsbt.boot.test
 
+import scala.annotation.nowarn
+
 class Exit(val code: Int) extends xsbti.Exit
 final class MainException(message: String) extends RuntimeException(message)
 final class ArgumentTest extends xsbti.AppMain:
@@ -22,10 +24,13 @@ class ExtraTest extends xsbti.AppMain:
         throw new MainException("Could not find '" + arg + "'")
     }
     new Exit(0)
+
 class PriorityTest extends xsbti.AppMain:
   def run(configuration: xsbti.AppConfiguration): xsbti.Exit =
     PriorityTest.run(configuration)
+
 object PriorityTest:
+  @nowarn
   def run(configuration: xsbti.AppConfiguration) =
     new Exit(0)
   def main(args: Array[String]): Unit =

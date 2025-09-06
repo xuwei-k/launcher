@@ -19,7 +19,8 @@ object EnumerationTest extends Properties("Enumeration"):
   def checkElements(`enum`: Enumeration, mapped: (String, Enumeration#Value)*) =
     val elements = `enum`.elements
     ("elements: " + elements) |:
-      (mapped.forall { case (s, v) => elements.contains(v) } && (elements.length == mapped.length))
+      (mapped.forall { case (_, v) => elements.contains(v) } && (elements.length == mapped.length))
+
   def checkToValue(`enum`: Enumeration, mapped: (String, Enumeration#Value)*) =
     def invalid(s: String) =
       ("valueOf(" + s + ")") |:

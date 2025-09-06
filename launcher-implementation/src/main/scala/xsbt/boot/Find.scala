@@ -28,7 +28,7 @@ class Find(config: LaunchConfiguration):
             fromRoot match
               case Nil         => Some(current)
               case head :: Nil => Some(head)
-              case xs          =>
+              case _           =>
                 Console.err.println(
                   "[error] [launcher] search method is 'only' and multiple ancestor directories match:\n\t" + fromRoot
                     .mkString("\n\t")

@@ -19,7 +19,7 @@ object GetLocks:
     Loaders(getClass.getClassLoader.getParent).flatMap(tryGet).headOption.getOrElse(Locks)
   private def tryGet(loader: ClassLoader): List[xsbti.GlobalLock] =
     try getLocks0(loader) :: Nil
-    catch case e: ClassNotFoundException => Nil
+    catch case _: ClassNotFoundException => Nil
   private def getLocks0(loader: ClassLoader) =
     Class
       .forName("xsbt.boot.Locks$", true, loader)

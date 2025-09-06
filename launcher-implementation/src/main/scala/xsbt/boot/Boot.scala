@@ -41,12 +41,12 @@ object Boot:
         remaining: List[String]
     ): LauncherArguments =
       args match
-        case "--launcher-version" :: rest =>
+        case "--launcher-version" :: _ =>
           Console.err.println(
             "sbt launcher version " + Package.getPackage("xsbt.boot").getImplementationVersion
           )
           exit(0)
-        case "--rt-ext-dir" :: rest =>
+        case "--rt-ext-dir" :: _ =>
           var v = sys.props("java.vendor") + "_" + sys.props("java.version")
           v = v.replaceAll("\\W", "_").toLowerCase
           /*

@@ -24,11 +24,11 @@ object CrossVersionUtil
 	{
 		val ReleaseV = """(\d+)\.(\d+)\.(\d+)(-\d+)?""".r
 		val CandidateV = """(\d+)\.(\d+)\.(\d+)(-RC\d+)""".r
-		val NonReleaseV = """(\d+)\.(\d+)\.(\d+)([-\w+]*)""".r		
+		val NonReleaseV = """(\d+)\.(\d+)\.(\d+)([-\w+]*)""".r
 		v match {
-			case ReleaseV(x, y, z, ht)    => Some((x.toInt, y.toInt))
-			case CandidateV(x, y, z, ht)  => Some((x.toInt, y.toInt))
-			case NonReleaseV(x, y, z, ht) if z.toInt > 0 => Some((x.toInt, y.toInt))
+			case ReleaseV(x, y, _, _)     => Some((x.toInt, y.toInt))
+			case CandidateV(x, y, _, _)   => Some((x.toInt, y.toInt))
+			case NonReleaseV(x, y, z, _) if z.toInt > 0 => Some((x.toInt, y.toInt))
 			case _ => None
 		}
 	}
@@ -42,9 +42,9 @@ object CrossVersionUtil
 		val BinCompatV = """(\d+)\.(\d+)\.(\d+)-bin(-.*)?""".r
 		val NonReleaseV = """(\d+)\.(\d+)\.(\d+)(-\w+)""".r
 		v match {
-			case ReleaseV(x, y, z, ht)    => Some((x.toInt, y.toInt))
-			case BinCompatV(x, y, z, ht)    => Some((x.toInt, y.toInt))
-			case NonReleaseV(x, y, z, ht) if z.toInt > 0 => Some((x.toInt, y.toInt))
+			case ReleaseV(x, y, _, _) => Some((x.toInt, y.toInt))
+			case BinCompatV(x, y, _, _) => Some((x.toInt, y.toInt))
+			case NonReleaseV(x, y, z, _) if z.toInt > 0 => Some((x.toInt, y.toInt))
 			case _ => None
 		}
 	}

@@ -7,7 +7,6 @@ import Pre.*
 import java.io.File
 import java.util.{ Locale, Properties }
 
-import scala.annotation.nowarn
 import scala.collection.immutable.List
 
 object Initialize:
@@ -47,7 +46,6 @@ object Initialize:
         yield initialize(properties, property.name, init)
     if !uninitialized.isEmpty then writeProperties(properties, file, "")
 
-  @nowarn
   def initialize(properties: Properties, name: String, init: PropertyInit): Unit =
     init match
       case set: SetProperty       => properties.setProperty(name, set.value)

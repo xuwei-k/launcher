@@ -1,5 +1,4 @@
 import com.typesafe.sbt.JavaVersionCheckPlugin.autoImport.*
-import sbt.Keys.*
 import sbt.*
 
 object Release {

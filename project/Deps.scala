@@ -8,8 +8,6 @@ object Deps {
   lazy val junit = "junit" % "junit" % "4.13.2"
   lazy val verify = "com.eed3si9n.verify" %% "verify" % "1.0.0"
 
-  // TODO - these should be like the above, just ModuleIDs
-  lazy val ivy = "org.scala-sbt.ivy" % "ivy" % "2.3.0-sbt-77cc781d727b367d3761f097d89f5a4762771d41"
   val coursierVersion = "2.1.23"
   lazy val coursier = ("io.get-coursier" %% "coursier" % coursierVersion)
     .cross(CrossVersion.for3Use2_13)

@@ -17,39 +17,6 @@ object Transform {
 
   lazy val conscriptConfigs = TaskKey[Unit]("conscript-configs")
 
-  def conscriptSettings(launch: Reference) = Seq(
-    conscriptConfigs := {
-      val res = (launch / Compile / managedResources).value
-      val src = (Compile / sourceDirectory).value
-      val source = res.filter(_.getName == "sbt.boot.properties").headOption getOrElse sys.error(
-        "No managed boot.properties file."
-      )
-      copyConscriptProperties(source, src / "conscript")
-      ()
-    }
-  )
-  def copyConscriptProperties(source: File, conscriptBase: File): Seq[File] = {
-    IO.delete(conscriptBase)
-    val pairs = Seq(
-      "sbt.xMain" -> "sbt",
-      "sbt.ScriptMain" -> "scalas",
-      "sbt.ConsoleMain" -> "screpl"
-    )
-    for ((main, dir) <- pairs) yield {
-      val file = conscriptBase / dir / "launchconfig"
-      copyPropertiesFile(source, main, file)
-      file
-    }
-  }
-  def copyPropertiesFile(source: File, newMain: String, target: File): Unit = {
-    def subMain(line: String): String =
-      if (line.trim.startsWith("class:")) "  class: " + newMain else line
-    IO.writeLines(target, IO.readLines(source) map subMain)
-  }
-
-  def crossGenSettings = transSourceSettings ++ Seq(
-    sourceProperties := Map("cross.package0" -> "sbt", "cross.package1" -> "cross")
-  )
   def transSourceSettings = Seq(
     inputSourceDirectory := sourceDirectory.value / "input_sources",
     inputSourceDirectories := Seq(inputSourceDirectory.value),

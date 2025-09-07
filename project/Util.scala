@@ -13,11 +13,6 @@ object Util {
     publishMavenStyle := true
   )
 
-  def minProject(path: File, nameString: String) =
-    Project(Project.normalizeModuleID(nameString), path)
-      .settings(commonSettings(nameString) ++ Release.javaVersionCheckSettings)
-  def baseProject(path: File, nameString: String) = minProject(path, nameString).settings(base)
-
   /** Configures a project to be java only. */
   lazy val javaOnly = Seq[Setting[?]](
     /*crossPaths := false, */ compileOrder := CompileOrder.JavaThenScala,
@@ -38,10 +33,6 @@ object Util {
         "-Wunused:all",
       )
     },
-  )
-  lazy val minimalSettings: Seq[Setting[?]] = Defaults.paths ++ Seq[Setting[?]](
-    crossTarget := target.value,
-    name := thisProject(_.id).value
   )
 
   def lastCompilationTime(analysis: Analysis): Long = {

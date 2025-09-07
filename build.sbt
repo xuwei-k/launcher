@@ -1,6 +1,6 @@
-import Deps._
-import Util._
-import com.typesafe.tools.mima.core._, ProblemFilters._
+import Deps.*
+import Util.*
+import com.typesafe.tools.mima.core.*, ProblemFilters.*
 
 lazy val keepFullClasses = settingKey[Seq[String]](
   "Fully qualified names of classes that proguard should preserve the non-private API of."

@@ -8,7 +8,7 @@ package xsbt.boot
 import org.scalacheck.*
 
 object ListMapProperties extends Properties("ListMap"):
-  implicit val genListMap: Arbitrary[ListMap[Int, Int]] = Arbitrary(
+  given Arbitrary[ListMap[Int, Int]] = Arbitrary(
     for (list <- Arbitrary.arbitrary[List[(Int, Int)]]) yield ListMap(list*)
   )
 

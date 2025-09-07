@@ -47,10 +47,10 @@ object PreTest extends Properties("Pre"):
     assert(substituteTilde("x~/") == "x~/")
     true
 
-  implicit lazy val arbFile: Arbitrary[File] = Arbitrary {
+  given Arbitrary[File] = Arbitrary {
     for (i <- Arbitrary.arbitrary[Int]) yield new File(i.toString)
   }
-  implicit lazy val genFiles: Gen[Array[File]] = Arbitrary.arbitrary[Array[File]]
+  val genFiles: Gen[Array[File]] = Arbitrary.arbitrary[Array[File]]
 
   def trap[T](t: => T): Option[T] =
     try Some(t)

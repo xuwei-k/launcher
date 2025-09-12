@@ -204,6 +204,12 @@ class CousierUpdate(config: UpdateConfiguration):
     val depVersion: Option[String] = target match
       case _: UpdateScala => scalaVersion
       case u: UpdateApp   => Some(Value.get(u.id.version))
+    val isSbt = target match
+      case _: UpdateScala => false
+      case u: UpdateApp   => Some(Value.get(u.id.name)) == Some("sbt")
+    val isZeroDot = depVersion match
+      case Some(v) => v.startsWith("0.")
+      case _       => false
     if !retrieveDir.exists then Files.createDirectories(retrieveDir.toPath)
     val downloadedJars = Fetch()
       .withCache(coursierCache)
@@ -220,6 +226,10 @@ class CousierUpdate(config: UpdateConfiguration):
             case n if n.startsWith("scala-reflect")  => "scala-reflect.jar"
             case n                                   => n
           new File(retrieveDir, name)
+        else if isSbt && downloaded.getName == "interface.jar" && isZeroDot then
+          val componentDir = new File(retrieveDir, "xsbti")
+          Files.createDirectories(componentDir.toPath)
+          new File(componentDir, downloaded.getName)
         else
           val name = downloaded.getName match
             // https://github.com/sbt/sbt/issues/6432

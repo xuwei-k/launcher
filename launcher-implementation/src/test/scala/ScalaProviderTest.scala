@@ -83,7 +83,7 @@ object ScalaProviderTest extends verify.BasicTestSuite:
       withLauncher { launcher =>
         Launch.run(launcher)(
           new RunConfiguration(
-            Some(unmapScalaVersion(LaunchTest.getScalaVersion)),
+            Some(LaunchTest.getScalaVersion),
             LaunchTest.testApp(mainClassName, extra(currentDirectory)).toID,
             currentDirectory,
             arguments
@@ -103,7 +103,7 @@ object ScalaProviderTest extends verify.BasicTestSuite:
     Array(resourceDirectory)
 
   private def checkScalaLoader(version: String) =
-    withLauncher(checkLauncher(version, mapScalaVersion(version)))
+    withLauncher(checkLauncher(version, version))
 
   private def checkLauncher(version: String, versionValue: String)(launcher: xsbti.Launcher) =
     import scala.reflect.Selectable.reflectiveSelectable
@@ -144,12 +144,6 @@ object LaunchTest:
     withTemporaryDirectory { bootDirectory =>
       f(Launcher(bootDirectory, testRepositories))
     }
-
-  val finalStyle = Set("2.9.1", "2.9.0-1", "2.9.0", "2.8.2", "2.8.1", "2.8.0")
-  def unmapScalaVersion(versionNumber: String) = versionNumber.stripSuffix(".final")
-  def mapScalaVersion(versionNumber: String) =
-    if finalStyle(versionNumber) then versionNumber + ".final"
-    else versionNumber
 
   def getScalaVersion: String = "3.7.2" // getScalaVersion(getClass.getClassLoader)
   def getScalaVersion(loader: ClassLoader): String =

@@ -5,7 +5,7 @@
 
 package xsbt.boot
 
-import Pre.*
+import xsbt.boot.Pre.*
 
 object JAnsi:
   def uninstall(loader: ClassLoader): Unit = callJAnsi("systemUninstall", loader)
@@ -15,7 +15,8 @@ object JAnsi:
     if isWindows && !isCygwin then callJAnsiMethod(methodName, loader)
   private def callJAnsiMethod(methodName: String, loader: ClassLoader): Unit =
     try
-      val c = Class.forName("org.fusesource.jansi.AnsiConsole", true, loader)
+      val c =
+        Class.forName(Seq("org", "fusesource", "jansi", "AnsiConsole").mkString("."), true, loader)
       c.getMethod(methodName).invoke(null)
       ()
     catch

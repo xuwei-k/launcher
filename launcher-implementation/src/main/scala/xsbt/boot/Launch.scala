@@ -221,7 +221,7 @@ class Launch private[xsbt] (
   @deprecated("sbt handles jansi management itself", "1.1.6")
   def jansiLoader(parent: ClassLoader): ClassLoader =
     val id = AppID(
-      "org.fusesource.jansi",
+      Seq("org", "fusesource", "jansi").mkString("."),
       "jansi",
       JAnsiVersion,
       "",
@@ -234,7 +234,12 @@ class Launch private[xsbt] (
     def makeLoader(): ClassLoader =
       val urls = toURLs(wrapNull(jansiHome.listFiles(JarFilter)))
       val loader = new URLClassLoader(urls, bootLoader)
-      checkLoader(loader, module, "org.fusesource.jansi.internal.WindowsSupport" :: Nil, loader)
+      checkLoader(
+        loader,
+        module,
+        Seq("org", "fusesource", "jansi", "internal", "WindowsSupport").mkString(".") :: Nil,
+        loader
+      )
     val existingLoader =
       if jansiHome.exists then
         try Some(makeLoader())

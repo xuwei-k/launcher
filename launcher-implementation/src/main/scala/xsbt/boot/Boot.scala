@@ -45,7 +45,9 @@ object Boot:
       args match
         case "--launcher-version" :: _ =>
           Console.err.println(
-            "sbt launcher version " + Package.getPackage("xsbt.boot").getImplementationVersion
+            "sbt launcher version " + this.getClass.getClassLoader
+              .getDefinedPackage("xsbt.boot")
+              .getImplementationVersion
           )
           exit(0)
         case "--rt-ext-dir" :: _ =>

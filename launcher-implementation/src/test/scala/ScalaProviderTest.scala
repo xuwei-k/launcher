@@ -145,7 +145,7 @@ object LaunchTest:
       f(Launcher(bootDirectory, testRepositories))
     }
 
-  def getScalaVersion: String = "3.7.2" // getScalaVersion(getClass.getClassLoader)
+  def getScalaVersion: String = "3.8.1" // getScalaVersion(getClass.getClassLoader)
   def getScalaVersion(loader: ClassLoader): String =
     getProperty(loader, "library.properties", "version.number")
   lazy val AppVersion =

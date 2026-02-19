@@ -14,7 +14,7 @@ ThisBuild / version := {
   else orig
 }
 ThisBuild / description := "Standalone launcher for maven/ivy deployed projects"
-ThisBuild / scalaVersion := "3.7.2"
+ThisBuild / scalaVersion := "3.8.1"
 ThisBuild / publishMavenStyle := true
 ThisBuild / crossPaths := false
 ThisBuild / resolvers += Resolver.typesafeIvyRepo("releases")
@@ -128,6 +128,7 @@ lazy val launchSub = (project in file("launcher-implementation"))
       val ignore2 = (launchInterfaceSub / publishLocal).value
       (Test / compile).value
     }
+    Proguard / proguardVersion := "7.4.0"
     Proguard / proguardOptions ++= Seq(
       "-keep,allowshrinking class * { *; }", // no obfuscation
       "-keepattributes SourceFile,LineNumberTable,Signature,InnerClasses,EnclosingMethod", // preserve debugging information

@@ -142,10 +142,19 @@ class ConfigurationParser:
   def getIvy(m: LabelMap): (Option[File], List[String], Boolean, Option[File]) =
     val (ivyHome, m1) = optfile(m, "ivy-home")
     val (checksums, m2) = ids(m1, "checksums", BootConfiguration.DefaultChecksums)
-    val (overrideRepos, m3) = bool(m2, "override-build-repos", false)
-    val (repoConfig, m4) = optfile(m3, "repository-config")
-    check(m4, "label")
-    (ivyHome, checksums, overrideRepos, repoConfig filter (_.exists))
+    val (repoConfigOverride, m3) = optfile(m2, "repository-override")
+    val (overrideRepos, m4) = bool(
+      m3,
+      "override-build-repos",
+      repoConfigOverride.exists(_.exists())
+    )
+    val (repoConfig, m5) = optfile(m4, "repository-config")
+    check(m5, "label")
+    val effectiveRepoConfig =
+      if overrideRepos && repoConfigOverride.exists(_.exists())
+      then repoConfigOverride
+      else repoConfig
+    (ivyHome, checksums, overrideRepos, effectiveRepoConfig filter (_.exists))
   def getBoot(m: LabelMap): BootSetup =
     val (dir, m1) = file(m, "directory", toFile("project/boot"))
     val (props, m2) = file(m1, "properties", toFile("project/build.properties"))
